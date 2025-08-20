@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRM Minimalista</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --system-bg-primary: #ffffff;
+            --system-bg-secondary: #f2f2f7;
+            --system-bg-tertiary: #ffffff;
+
+            --system-fill-primary: #e5e5ea;
+            --system-fill-secondary: #dcdce0;
+
+            --system-label-primary: #000000;
+            --system-label-secondary: #636366;
+            --system-label-tertiary: #8e8e93;
+
+            --system-separator: #d2d2d7;
+        }
+        .dark {
+            --system-bg-primary: #000000;
+            --system-bg-secondary: #1c1c1e;
+            --system-bg-tertiary: #1c1c1e;
+
+            --system-fill-primary: #3a3a3c;
+            --system-fill-secondary: #2c2c2e;
+
+            --system-label-primary: #ffffff;
+            --system-label-secondary: #a1a1a6;
+            --system-label-tertiary: #8e8e93;
+
+            --system-separator: #3a3a3c;
+        }
+        body {
+            background-color: var(--system-bg-secondary);
+            color: var(--system-label-primary);
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'system-bg-primary': 'var(--system-bg-primary)',
+                        'system-bg-secondary': 'var(--system-bg-secondary)',
+                        'system-bg-tertiary': 'var(--system-bg-tertiary)',
+                        'system-fill-primary': 'var(--system-fill-primary)',
+                        'system-fill-secondary': 'var(--system-fill-secondary)',
+                        'system-label-primary': 'var(--system-label-primary)',
+                        'system-label-secondary': 'var(--system-label-secondary)',
+                        'system-label-tertiary': 'var(--system-label-tertiary)',
+                        'system-separator': 'var(--system-separator)',
+                        
+                        'apple-blue': '#0A84FF',
+                        'apple-green': '#30D158',
+                        'apple-red': '#FF453A',
+                        'apple-yellow': '#FFD60A',
+                        'apple-orange': '#FF9F0A',
+                        'apple-purple': '#BF5AF2',
+                        'apple-teal': '#64D2FF',
+                        'apple-indigo': '#5E5CE6',
+                        'apple-lime': '#32D796',
+                    },
+                    borderRadius: {
+                        'xl': '1rem',
+                        '2xl': '1.25rem',
+                    },
+                    boxShadow: {
+                         'soft': '0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 16px rgba(0, 0, 0, 0.04)',
+                         'soft-dark': '0 0 0 1px rgba(255, 255, 255, 0.08)',
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'San Francisco', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
+    "react/": "https://esm.sh/react@^19.1.1/"
+  }
+}
+</script>
+</head>
+<body class="bg-system-bg-secondary antialiased">
+<div id="root"></div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
