@@ -8,8 +8,6 @@ import { Icon } from './Icon';
 import { Button } from './Button';
 import { STATUS_OPTIONS } from '../constants';
 import { ImportClientsModal } from './ImportClientsModal';
-import { ThemeSwitcher } from './ThemeSwitcher';
-import type { Theme } from '../hooks/useTheme';
 
 interface DashboardProps {
     userName: string;
@@ -18,8 +16,6 @@ interface DashboardProps {
     onAddClient: () => void;
     onShowProductivityReport: () => void;
     addMultipleClients: (clients: Array<Partial<Client> & {name: string, phone: string}>) => void;
-    theme: Theme;
-    toggleTheme: () => void;
 }
 
 type KpiFilterType = 'overdue' | 'today' | 'future' | 'active' | null;
@@ -32,7 +28,7 @@ const KpiCard: React.FC<{ title: string; value: number; colorClass: string; isSe
 );
 
 
-export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClientSelect, onAddClient, onShowProductivityReport, addMultipleClients, theme, toggleTheme }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClientSelect, onAddClient, onShowProductivityReport, addMultipleClients }) => {
     const today = new Date().toISOString().split('T')[0];
     const [filter, setFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all');
@@ -134,7 +130,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
                         <p className="text-system-label-secondary mt-1">Visão geral dos seus clientes.</p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
-                         <ThemeSwitcher theme={theme} toggleTheme={toggleTheme} />
                          <Button variant="secondary" onClick={onShowProductivityReport}>
                             <Icon name="bar-chart-2" className="w-4 h-4 mr-2" />
                             Produtividade

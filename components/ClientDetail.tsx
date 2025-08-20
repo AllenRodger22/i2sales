@@ -30,7 +30,7 @@ const TimelineItem: React.FC<{ event: TimelineEvent; onEdit: (event: TimelineEve
             case TimelineEventType.FollowUp:
                 return <Icon name="calendar" className={iconClass} />;
             default:
-                return <div className="h-2.5 w-2.5 rounded-full bg-system-label-tertiary"></div>;
+                return <div className="h-3 w-3 rounded-full bg-system-label-tertiary"></div>;
         }
     }
     

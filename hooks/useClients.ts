@@ -6,6 +6,11 @@ import { Status, TimelineEventType } from '../types';
 
 const CLIENTS_STORAGE_KEY = 'crmClients_v5';
 
+const sanitizeText = (text: string | undefined): string => {
+    if (!text) return '';
+    return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[´`~^]/g, '');
+};
+
 export const useClients = () => {
     const [clients, setClients] = useState<Client[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -41,6 +46,10 @@ export const useClients = () => {
     const addClient = useCallback((clientData: Omit<Client, 'id' | 'createdAt' | 'status' | 'timeline'>) => {
         const newClient: Client = {
             ...clientData,
+            name: sanitizeText(clientData.name),
+            email: sanitizeText(clientData.email),
+            origin: sanitizeText(clientData.origin),
+            customFields: clientData.customFields?.map(cf => ({ name: sanitizeText(cf.name), value: sanitizeText(cf.value) })),
             id: `${new Date().toISOString()}-${Math.random().toString(36).substring(2, 9)}`,
             createdAt: new Date().toISOString(),
             status: Status.PrimeiroAtendimento,
@@ -107,15 +116,15 @@ export const useClients = () => {
             return {
                 id: clientData.id || `${new Date().toISOString()}-${Math.random().toString(36).substring(2, 9)}`,
                 createdAt: createdAt,
-                name: clientData.name,
+                name: sanitizeText(clientData.name),
                 phone: clientData.phone,
-                email: clientData.email || '',
-                origin: clientData.origin || '',
+                email: sanitizeText(clientData.email) || '',
+                origin: sanitizeText(clientData.origin) || '',
                 status: clientData.status || Status.PrimeiroAtendimento,
                 isPending: clientData.isPending || false,
                 followUpDate: clientData.followUpDate,
                 timeline: timeline,
-                customFields: clientData.customFields || [],
+                customFields: clientData.customFields?.map(cf => ({ name: sanitizeText(cf.name), value: sanitizeText(cf.value) })) || [],
             };
         });
         saveClients(prevClients => [...prevClients, ...newClients]);
@@ -126,8 +135,19 @@ export const useClients = () => {
     }, [clients]);
 
     const updateClient = useCallback((id: string, data: Partial<Client>) => {
+        const sanitizedData = { ...data };
+        if (sanitizedData.name) sanitizedData.name = sanitizeText(sanitizedData.name);
+        if (sanitizedData.email) sanitizedData.email = sanitizeText(sanitizedData.email);
+        if (sanitizedData.origin) sanitizedData.origin = sanitizeText(sanitizedData.origin);
+        if (sanitizedData.customFields) {
+            sanitizedData.customFields = sanitizedData.customFields.map(cf => ({
+                name: sanitizeText(cf.name),
+                value: sanitizeText(cf.value)
+            }));
+        }
+        
         saveClients(prevClients => prevClients.map(client =>
-            client.id === id ? { ...client, ...data } : client
+            client.id === id ? { ...client, ...sanitizedData } : client
         ));
     }, [saveClients]);
 

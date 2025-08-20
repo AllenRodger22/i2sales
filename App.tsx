@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useClients } from './hooks/useClients';
-import { useTheme } from './hooks/useTheme';
 import { Dashboard } from './components/Dashboard';
 import { ClientDetail } from './components/ClientDetail';
 import { AddClientModal } from './components/AddClientModal';
@@ -17,8 +16,7 @@ type View = { type: 'DASHBOARD' } | { type: 'CLIENT_DETAIL'; clientId: string } 
 
 const App: React.FC = () => {
     const { clients, isLoading, addClient, findClientById, updateClient, addTimelineEvent, addMultipleClients, updateTimelineEvent } = useClients();
-    const { theme, toggleTheme } = useTheme();
-
+    
     const [view, setView] = useState<View>({ type: 'DASHBOARD' });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
@@ -121,8 +119,6 @@ const App: React.FC = () => {
                         onAddClient={() => setIsModalOpen(true)}
                         onShowProductivityReport={handleShowProductivityReport}
                         addMultipleClients={addMultipleClients}
-                        theme={theme}
-                        toggleTheme={toggleTheme}
                     />
                 );
             case 'CLIENT_DETAIL':
