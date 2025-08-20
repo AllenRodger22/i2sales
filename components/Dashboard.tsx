@@ -106,17 +106,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
     }, [clients, filter, statusFilter, kpiFilter, today]);
 
     const handleExport = () => {
-        const exportableStatuses = [
-            Status.Tratativa,
-            Status.AguardandoDoc,
-            Status.DocCompleta,
-            Status.EmAnalise,
-            Status.Aprovado,
-            Status.VendaGerada,
-            Status.Reprovado,
-        ];
-        const clientsToExport = clients.filter(client => exportableStatuses.includes(client.status));
-        exportToCsv(clientsToExport, userName);
+        exportToCsv(clients, userName);
     };
     
     const baseInputClasses = "bg-system-bg-primary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
