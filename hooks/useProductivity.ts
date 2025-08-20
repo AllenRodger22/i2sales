@@ -1,5 +1,6 @@
 
 
+
 import { useMemo } from 'react';
 import type { Client, ProductivityReportData, DailyProductivity } from '../types';
 import { Status, TimelineEventType } from '../types';
@@ -27,12 +28,10 @@ const calculateFullReport = (clients: Client[]): ProductivityReportData => {
         // Sort timeline oldest to newest to find the *first* event of each type
         const sortedTimeline = [...(client.timeline || [])].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-        // 1. Ligações: First call attempt (Ligacao, Observacao, or CNE)
-        const firstCall = sortedTimeline.find(e =>
-            [TimelineEventType.Ligacao, TimelineEventType.Observacao, TimelineEventType.CNE].includes(e.type)
-        );
-        if (firstCall) {
-            const dateKey = new Date(firstCall.date).toISOString().split('T')[0];
+        // 1. Ligações: First call of type 'Ligação'
+        const firstRealCall = sortedTimeline.find(e => e.type === TimelineEventType.Ligacao);
+        if (firstRealCall) {
+            const dateKey = new Date(firstRealCall.date).toISOString().split('T')[0];
             getDayEntry(dateKey).ligacoes += 1;
         }
 

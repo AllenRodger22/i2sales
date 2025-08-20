@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useClients } from './hooks/useClients';
 import { Dashboard } from './components/Dashboard';
@@ -157,7 +155,7 @@ const App: React.FC = () => {
                 )}
             </main>
              <footer className="text-center p-4 text-xs text-system-label-tertiary flex-shrink-0">
-                i2Sales CRM v4.0.4
+                i2Sales CRM v4.1.0
             </footer>
         </div>
     );

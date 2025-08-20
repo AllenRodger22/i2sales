@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface IconProps {
-    name: 'plus' | 'user' | 'calendar' | 'arrow-left' | 'export' | 'x' | 'clock' | 'message-circle' | 'phone' | 'edit-3' | 'list' | 'bar-chart-2' | 'save' | 'rotate-cw' | 'trash-2' | 'sheet' | 'upload' | 'sun' | 'moon' | 'whatsapp' | 'dollar-sign' | 'arrow-up-right' | 'users' | 'alert-triangle' | 'phone-off';
+    name: 'plus' | 'user' | 'calendar' | 'arrow-left' | 'export' | 'x' | 'clock' | 'message-circle' | 'phone' | 'edit-3' | 'list' | 'bar-chart-2' | 'save' | 'trash-2' | 'sheet' | 'upload' | 'sun' | 'moon' | 'whatsapp' | 'dollar-sign' | 'arrow-up-right' | 'users' | 'alert-triangle' | 'phone-off';
     className?: string;
     title?: string;
 }
@@ -105,12 +105,6 @@ export const Icon: React.FC<IconProps> = ({ name, className = 'w-6 h-6', title }
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
                 {title && <title>{title}</title>}
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline>
-            </svg>
-        ),
-        'rotate-cw': (
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-                {title && <title>{title}</title>}
-                <polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
             </svg>
         ),
         'trash-2': (
