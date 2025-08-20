@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useClients } from './hooks/useClients';
 import { useTheme } from './hooks/useTheme';
@@ -6,6 +8,7 @@ import { ClientDetail } from './components/ClientDetail';
 import { AddClientModal } from './components/AddClientModal';
 import { ProductivityReport } from './components/BrokerPanel';
 import { UserNamePrompt } from './components/UserNamePrompt';
+import { TutorialModal } from './components/TutorialModal';
 import type { Client } from './types';
 
 
@@ -19,6 +22,7 @@ const App: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
     const [isUserLoading, setIsUserLoading] = useState(true);
+    const [showTutorial, setShowTutorial] = useState(false);
 
     useEffect(() => {
         try {
@@ -26,12 +30,25 @@ const App: React.FC = () => {
             if (storedName) {
                 setUserName(storedName);
             }
+            const tutorialSeen = localStorage.getItem('crmTutorialSeen_v1');
+            if (!tutorialSeen) {
+                setShowTutorial(true);
+            }
         } catch (error) {
             console.error("Failed to load user name from localStorage", error);
         } finally {
             setIsUserLoading(false);
         }
     }, []);
+    
+    const handleCloseTutorial = () => {
+        try {
+            localStorage.setItem('crmTutorialSeen_v1', 'true');
+        } catch (error) {
+             console.error("Failed to save tutorial status to localStorage", error);
+        }
+        setShowTutorial(false);
+    };
 
     const handleNameSet = (name: string) => {
         try {
@@ -114,6 +131,7 @@ const App: React.FC = () => {
     return (
         <div className="min-h-screen bg-system-bg-secondary flex flex-col">
             <main className="flex-grow h-full">
+                {showTutorial && <TutorialModal onClose={handleCloseTutorial} />}
                 {renderContent()}
                 {isModalOpen && (
                     <AddClientModal
@@ -123,7 +141,7 @@ const App: React.FC = () => {
                 )}
             </main>
              <footer className="text-center p-4 text-xs text-system-label-tertiary flex-shrink-0">
-                CRM Minimalista v4.0.0
+                i2Sales CRM v4.0.1
             </footer>
         </div>
     );
