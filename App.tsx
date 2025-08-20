@@ -9,6 +9,7 @@ import { AddClientModal } from './components/AddClientModal';
 import { ProductivityReport } from './components/BrokerPanel';
 import { UserNamePrompt } from './components/UserNamePrompt';
 import { TutorialModal } from './components/TutorialModal';
+import { EulaModal } from './components/EulaModal';
 import type { Client } from './types';
 
 
@@ -21,26 +22,41 @@ const App: React.FC = () => {
     const [view, setView] = useState<View>({ type: 'DASHBOARD' });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
-    const [isUserLoading, setIsUserLoading] = useState(true);
+    const [isInitialSetupLoading, setIsInitialSetupLoading] = useState(true);
     const [showTutorial, setShowTutorial] = useState(false);
+    const [eulaAccepted, setEulaAccepted] = useState(false);
 
     useEffect(() => {
         try {
-            const storedName = localStorage.getItem('crmUserName');
-            if (storedName) {
-                setUserName(storedName);
-            }
-            const tutorialSeen = localStorage.getItem('crmTutorialSeen_v1');
-            if (!tutorialSeen) {
-                setShowTutorial(true);
+            const eulaIsAccepted = localStorage.getItem('crmEulaAccepted_v1') === 'true';
+            setEulaAccepted(eulaIsAccepted);
+
+            if (eulaIsAccepted) {
+                const storedName = localStorage.getItem('crmUserName');
+                if (storedName) {
+                    setUserName(storedName);
+                }
+                const tutorialSeen = localStorage.getItem('crmTutorialSeen_v1');
+                if (!tutorialSeen) {
+                    setShowTutorial(true);
+                }
             }
         } catch (error) {
-            console.error("Failed to load user name from localStorage", error);
+            console.error("Failed to load initial setup from localStorage", error);
         } finally {
-            setIsUserLoading(false);
+            setIsInitialSetupLoading(false);
         }
     }, []);
     
+    const handleEulaAccept = () => {
+        try {
+            localStorage.setItem('crmEulaAccepted_v1', 'true');
+            setEulaAccepted(true);
+        } catch (error) {
+            console.error("Failed to save EULA status to localStorage", error);
+        }
+    };
+
     const handleCloseTutorial = () => {
         try {
             localStorage.setItem('crmTutorialSeen_v1', 'true');
@@ -78,7 +94,7 @@ const App: React.FC = () => {
         return null;
     }, [view, findClientById]);
 
-    if (isLoading || isUserLoading) {
+    if (isLoading || isInitialSetupLoading) {
         return (
             <div className="flex items-center justify-center h-screen bg-system-bg-secondary">
                 <p className="text-system-label-secondary">Carregando...</p>
@@ -86,6 +102,10 @@ const App: React.FC = () => {
         );
     }
     
+    if (!eulaAccepted) {
+        return <EulaModal onAccept={handleEulaAccept} />;
+    }
+
     if (!userName) {
         return <UserNamePrompt onNameSet={handleNameSet} />;
     }
