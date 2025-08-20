@@ -21,7 +21,7 @@ const inputClasses = "block w-full bg-system-bg-tertiary dark:bg-system-bg-secon
 const editableTypes: TimelineEventType[] = [TimelineEventType.Ligacao, TimelineEventType.Observacao, TimelineEventType.CNE, TimelineEventType.Anotacao];
 const secondaryButtonLinkClasses = "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-apple-blue focus:ring-offset-2 dark:focus:ring-offset-system-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed bg-system-fill-primary text-system-label-primary hover:bg-system-fill-secondary active:brightness-95 dark:active:brightness-105";
 
-const TimelineItem: React.FC<{ event: TimelineEvent; onEdit: (event: TimelineEvent) => void; }> = ({ event, onEdit }) => {
+const TimelineItem: React.FC<{ event: TimelineEvent; onEdit: (event: TimelineEvent) => void; isLast: boolean; }> = ({ event, onEdit, isLast }) => {
     const getIcon = (type: TimelineEventType) => {
         const iconClass = "w-5 h-5 text-system-label-secondary";
         switch (type) {
@@ -41,7 +41,7 @@ const TimelineItem: React.FC<{ event: TimelineEvent; onEdit: (event: TimelineEve
             className={`relative flex gap-x-4 group`}
             onClick={() => isEditable && onEdit(event)}
         >
-            <div className="absolute left-3 top-10 h-full w-px bg-system-separator"></div>
+            {!isLast && <div className="absolute left-3 top-6 bottom-2 w-px bg-system-separator"></div>}
             <div className="relative flex h-6 w-6 flex-none items-center justify-center bg-system-bg-secondary rounded-full mt-2 ring-8 ring-system-bg-primary">
                 {getIcon(event.type)}
             </div>
@@ -96,22 +96,27 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
     
     const formatWhatsAppPhone = (phone: string): string => {
         let cleanPhone = phone.replace(/\D/g, '');
+
+        if (cleanPhone.length === 8) {
+            return `55859${cleanPhone}`;
+        }
+        
         if (cleanPhone.startsWith('55')) {
             const phoneWithoutCC = cleanPhone.substring(2);
-            if (phoneWithoutCC.length === 10) {
+            if (phoneWithoutCC.length === 10) { // DDD + 8 digits, needs a 9
                  const ddd = phoneWithoutCC.substring(0, 2);
                  const number = phoneWithoutCC.substring(2);
                  return `55${ddd}9${number}`;
             }
-            return cleanPhone;
+            return cleanPhone; // Already has 55 and is probably correct (e.g., 55 + DDD + 9 + 8 digits)
         }
-        if (cleanPhone.length === 11) return `55${cleanPhone}`;
-        if (cleanPhone.length === 10) {
+        if (cleanPhone.length === 11) return `55${cleanPhone}`; // DDD (2) + 9 + number (8)
+        if (cleanPhone.length === 10) { // DDD (2) + number (8)
             const ddd = cleanPhone.substring(0, 2);
             const number = cleanPhone.substring(2);
             return `55${ddd}9${number}`;
         }
-        return `55${cleanPhone}`;
+        return `55${cleanPhone}`; // Fallback for other cases
     };
 
     const whatsAppPhone = formatWhatsAppPhone(client.phone);
@@ -251,7 +256,7 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
                             <h2 className="text-lg font-semibold text-system-label-primary mb-4">Linha do Tempo</h2>
                              <ul role="list" className="-mb-8">
                                 {sortedTimeline.length > 0 ?
-                                    sortedTimeline.map(event => <TimelineItem key={event.id} event={event} onEdit={setEditingEvent} />) :
+                                    sortedTimeline.map((event, index) => <TimelineItem key={event.id} event={event} onEdit={setEditingEvent} isLast={index === sortedTimeline.length - 1} />) :
                                     <p className="text-sm text-system-label-secondary">Nenhum evento na linha do tempo.</p>
                                 }
                             </ul>

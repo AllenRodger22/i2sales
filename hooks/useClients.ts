@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Client, TimelineEvent } from '../types';
 import { Status, TimelineEventType } from '../types';
 
-const CLIENTS_STORAGE_KEY = 'crmClients_v5';
+const CLIENTS_STORAGE_KEY = 'crmClients_v6';
 
 const sanitizeText = (text: string | undefined): string => {
     if (!text) return '';

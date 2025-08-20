@@ -157,7 +157,7 @@ const App: React.FC = () => {
                 )}
             </main>
              <footer className="text-center p-4 text-xs text-system-label-tertiary flex-shrink-0">
-                i2Sales CRM v4.0.1
+                i2Sales CRM v4.0.4
             </footer>
         </div>
     );
