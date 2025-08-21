@@ -8,6 +8,7 @@ import { Icon } from './Icon';
 import { Button } from './Button';
 import { STATUS_OPTIONS } from '../constants';
 import { ImportClientsModal } from './ImportClientsModal';
+import { useAuth } from '../contexts/AuthContext';
 
 interface DashboardProps {
     userName: string;
@@ -15,8 +16,13 @@ interface DashboardProps {
     onClientSelect: (id: string) => void;
     onAddClient: () => void;
     onShowProductivityReport: () => void;
-    importClients: (file: File, onProgress: (progress: { processed: number, total: number }) => void) => Promise<void>;
+    importClients: (
+        clientsToImport: Array<Record<string, string>>,
+        mapping: Record<string, string>,
+        onProgress: (progress: { current: number; total: number; duplicates: number; imported: number; failures: number }) => void
+    ) => Promise<{ imported: number; duplicates: number; failures: number }>;
     onLogout: () => void;
+    deleteAllClients: () => Promise<void>;
 }
 
 type KpiFilterType = 'overdue' | 'today' | 'future' | 'active' | null;
@@ -29,7 +35,8 @@ const KpiCard: React.FC<{ title: string; value: number; colorClass: string; isSe
 );
 
 
-export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClientSelect, onAddClient, onShowProductivityReport, importClients, onLogout }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClientSelect, onAddClient, onShowProductivityReport, importClients, onLogout, deleteAllClients }) => {
+    const { user } = useAuth();
     const [filter, setFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all');
     const [kpiFilter, setKpiFilter] = useState<KpiFilterType>('active');
@@ -131,6 +138,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
     const handleExport = () => {
         exportToCsv(clients, userName);
     };
+
+    const handleBulkDelete = async () => {
+        const confirm1 = window.confirm('TEM CERTEZA ABSOLUTA? Esta ação irá apagar TODOS os clientes.');
+        if (confirm1) {
+          const confirm2 = window.prompt('Para confirmar, digite "DELETAR TUDO" na caixa abaixo.');
+          if (confirm2 === 'DELETAR TUDO') {
+            await deleteAllClients();
+          } else {
+            alert('Operação cancelada.');
+          }
+        }
+    };
     
     const baseInputClasses = "bg-system-bg-primary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
 
@@ -155,7 +174,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
                             <Icon name="export" className="w-4 h-4 mr-2" />
                             Exportar
                         </Button>
-                        <Button onClick={onLogout} variant="secondary" className="bg-apple-red/10 text-apple-red hover:bg-apple-red/20">Sair</Button>
+                        <Button onClick={onLogout} variant="secondary">Sair</Button>
+                         {user?.role === 'admin' && (
+                            <Button onClick={handleBulkDelete} variant="secondary" className="bg-apple-red text-white hover:bg-apple-red/90">
+                                <Icon name="trash-2" className="w-4 h-4 mr-2" />
+                                Deletar Tudo
+                            </Button>
+                        )}
                         <Button onClick={onAddClient}>
                             <Icon name="plus" className="w-4 h-4 mr-2" />
                             Novo Cliente

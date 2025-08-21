@@ -64,16 +64,12 @@ export const mapClientToApi = (client: Partial<Client>): any => {
 
 // --- API FETCH WRAPPER ---
 
-const apiRequest = async (endpoint: string, method: string, body?: any, isFormData = false) => {
-    const headers: HeadersInit = {};
+const apiRequest = async (endpoint: string, method: string, body?: any) => {
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
     const token = getToken();
     
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    if (!isFormData) {
-        headers['Content-Type'] = 'application/json';
     }
 
     const config: RequestInit = {
@@ -82,7 +78,7 @@ const apiRequest = async (endpoint: string, method: string, body?: any, isFormDa
     };
     
     if (body) {
-        config.body = isFormData ? body : JSON.stringify(body);
+        config.body = JSON.stringify(body);
     }
     
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
@@ -92,12 +88,18 @@ const apiRequest = async (endpoint: string, method: string, body?: any, isFormDa
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
-    // For 204 No Content response
-    if (response.status === 204) {
+    const responseText = await response.text();
+    // Handle empty responses gracefully, which can happen for GET requests on empty collections.
+    if (!responseText) {
         return null;
     }
 
-    return response.json();
+    try {
+        return JSON.parse(responseText);
+    } catch (error) {
+        console.error("Failed to parse JSON from response:", responseText);
+        throw new Error("Received an invalid response from the server.");
+    }
 };
 
 // --- AUTH ENDPOINTS ---
@@ -108,7 +110,9 @@ export const apiLogin = (data: any) => apiRequest('/api/auth/login', 'POST', dat
 // --- CLIENT ENDPOINTS ---
 export const apiGetClients = async (): Promise<Client[]> => {
     const data = await apiRequest('/api/clientes', 'GET');
-    return data.map(mapApiToClient);
+    // If the server returns an empty body (null), return an empty array.
+    if (!data) return [];
+    return Array.isArray(data) ? data.map(mapApiToClient) : [];
 };
 
 export const apiCreateClient = (clientData: any) => {
@@ -136,6 +140,4 @@ export const apiUpdateClient = (clientId: string, clientData: Partial<Client>) =
 
 export const apiDeleteClient = (clientId: string) => apiRequest(`/api/clientes/${clientId}`, 'DELETE');
 
-export const apiUploadClients = (formData: FormData) => {
-    return apiRequest('/api/clientes/upload', 'POST', formData, true);
-};
+export const apiDeleteAllClients = () => apiRequest(`/api/clientes/bulk-delete`, 'DELETE');

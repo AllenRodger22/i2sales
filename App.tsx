@@ -14,7 +14,7 @@ import type { Client } from './types';
 type View = { type: 'DASHBOARD' } | { type: 'CLIENT_DETAIL'; clientId: string } | { type: 'PRODUCTIVITY_REPORT' };
 
 const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName, onLogout }) => {
-    const { clients, isLoading, addClient, findClientById, updateClient, addTimelineEvent, importClients, deleteClient, updateTimelineEvent } = useClients();
+    const { clients, isLoading, addClient, findClientById, updateClient, importClients, deleteClient, deleteAllClients } = useClients();
     
     const [view, setView] = useState<View>({ type: 'DASHBOARD' });
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -79,6 +79,7 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName
                         onShowProductivityReport={handleShowProductivityReport}
                         importClients={importClients}
                         onLogout={onLogout}
+                        deleteAllClients={deleteAllClients}
                     />
                 );
             case 'CLIENT_DETAIL':
@@ -86,9 +87,7 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName
                     <ClientDetail
                         client={currentClient}
                         onBack={handleBackToDashboard}
-                        updateClient={(id, data) => updateClient(id, data)}
-                        addTimelineEvent={addTimelineEvent}
-                        updateTimelineEvent={updateTimelineEvent}
+                        updateClient={updateClient}
                         deleteClient={deleteClient}
                     />
                 ) : (
