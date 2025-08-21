@@ -1,66 +1,164 @@
-// components/Auth.tsx
-import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
-import { useAuth } from '../contexts/AuthContext'; // Importe seu hook useAuth
+import React, { useState, useMemo, useEffect } from 'react';
+import { useClients } from './hooks/useClients';
+import { Dashboard } from './components/Dashboard';
+import { ClientDetail } from './components/ClientDetail';
+import { AddClientModal } from './components/AddClientModal';
+import { ProductivityReport } from './components/BrokerPanel';
+import { AuthScreen } from './components/Auth';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { EulaModal } from './components/EulaModal';
+import type { Client } from './types';
 
-// Renomeei para AuthScreen para combinar com o nome que você usou no App.tsx
-export const AuthScreen: React.FC = () => {
-    // Pegamos a função 'login' do nosso contexto.
-    // Precisamos garantir que essa função exista no AuthContext.
-    const { login } = useAuth();
 
-    const handleLoginSuccess = async (credentialResponse: CredentialResponse) => {
-        const idToken = credentialResponse.credential;
-        if (!idToken) {
-            console.error("Não foi possível obter o token do Google.");
-            return;
-        }
+type View = { type: 'DASHBOARD' } | { type: 'CLIENT_DETAIL'; clientId: string } | { type: 'PRODUCTIVITY_REPORT' };
 
-        console.log("Token do Google recebido, enviando para o backend...");
+const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName, onLogout }) => {
+    const { clients, isLoading, addClient, findClientById, updateClient, importClients, deleteClient, deleteAllClients } = useClients();
+    
+    const [view, setView] = useState<View>({ type: 'DASHBOARD' });
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-        // ETAPA CRÍTICA: Enviar este token para seu backend no Render
-        try {
-            // Substitua pela URL real do seu backend
-            const backendUrl = 'https://SEU_BACKEND.onrender.com/api/v1/auth/google';
-
-            const response = await fetch(backendUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: idToken }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Falha na autenticação com o backend.');
-            }
-
-            const data = await response.json();
-            // 'data' deve ser o objeto com { user: {...}, token: 'seu_jwt_do_backend' }
-            
-            // Chama a função de login do nosso contexto com os dados do NOSSO backend
-            login(data.user, data.token);
-
-        } catch (error) {
-            console.error("Erro ao validar o token com o backend:", error);
-            // Adicione aqui uma mensagem de erro para o usuário se desejar
-        }
+    const handleClientSelect = (id: string) => {
+        setView({ type: 'CLIENT_DETAIL', clientId: id });
     };
 
-    const handleLoginError = () => {
-        console.error("Ocorreu um erro durante o login com o Google.");
+    const handleBackToDashboard = () => {
+        setView({ type: 'DASHBOARD' });
     };
+
+    const handleShowProductivityReport = () => {
+        setView({ type: 'PRODUCTIVITY_REPORT' });
+    };
+
+    const currentClient = useMemo(() => {
+        if (view.type === 'CLIENT_DETAIL') {
+            // Client ID from the backend is `_id`
+            return findClientById(view.clientId);
+        }
+        return null;
+    }, [view, findClientById]);
+    
+    if (isLoading) {
+         return (
+            <div className="flex items-center justify-center h-screen bg-system-bg-secondary">
+                <p className="text-system-label-secondary">Carregando seus dados...</p>
+            </div>
+        );
+    }
+
+
+    const renderContent = () => {
+        switch (view.type) {
+            case 'DASHBOARD':
+                return (
+                    <Dashboard
+                        userName={userName}
+                        clients={clients}
+                        onClientSelect={(id) => handleClientSelect(id)}
+                        onAddClient={() => setIsModalOpen(true)}
+                        onShowProductivityReport={handleShowProductivityReport}
+                        importClients={importClients}
+                        onLogout={onLogout}
+                        deleteAllClients={deleteAllClients}
+                    />
+                );
+            case 'CLIENT_DETAIL':
+                return currentClient ? (
+                    <ClientDetail
+                        client={currentClient}
+                        onBack={handleBackToDashboard}
+                        updateClient={updateClient}
+                        deleteClient={deleteClient}
+                    />
+                ) : (
+                     <div className="flex items-center justify-center h-screen bg-system-bg-secondary">
+                        <p className="text-system-label-secondary">Cliente não encontrado. <a href="#" onClick={handleBackToDashboard} className="text-apple-blue">Voltar ao painel.</a></p>
+                    </div>
+                );
+            case 'PRODUCTIVITY_REPORT':
+                return (
+                    <ProductivityReport
+                        userName={userName}
+                        onBack={handleBackToDashboard}
+                        clients={clients}
+                    />
+                );
+            default:
+                return null;
+        }
+    }
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen bg-system-bg-secondary text-white">
-            <div className="text-center p-8 bg-system-bg rounded-lg shadow-lg">
-                <h1 className="text-3xl font-bold mb-2">Bem-vindo ao i2Sales</h1>
-                <p className="text-system-label-secondary mb-6">Faça login com sua conta Google para continuar.</p>
-                <GoogleLogin
-                    onSuccess={handleLoginSuccess}
-                    onError={handleLoginError}
-                    theme="filled_black"
-                    shape="pill"
-                    text="continue_with"
-                />
-            </div>
+        <div className="min-h-screen bg-system-bg-secondary flex flex-col">
+            <main className="flex-grow h-full">
+                {renderContent()}
+                {isModalOpen && (
+                    <AddClientModal
+                        onClose={() => setIsModalOpen(false)}
+                        addClient={addClient}
+                    />
+                )}
+            </main>
+             <footer className="text-center p-4 text-xs text-system-label-tertiary flex-shrink-0 flex items-center justify-center gap-2">
+                <span>i2Sales CRM v5.0.0</span>
+            </footer>
         </div>
     );
+}
+
+
+const AppContent: React.FC = () => {
+    const { isAuthenticated, user, isLoading, logout } = useAuth();
+    const [eulaAccepted, setEulaAccepted] = useState(false);
+    const [isEulaLoading, setIsEulaLoading] = useState(true);
+
+     useEffect(() => {
+        try {
+            const eulaIsAccepted = localStorage.getItem('crmEulaAccepted_v1') === 'true';
+            setEulaAccepted(eulaIsAccepted);
+        } catch (error) {
+            console.error("Failed to load EULA status from localStorage", error);
+        } finally {
+            setIsEulaLoading(false);
+        }
+    }, []);
+
+    const handleEulaAccept = () => {
+        try {
+            localStorage.setItem('crmEulaAccepted_v1', 'true');
+            setEulaAccepted(true);
+        } catch (error) {
+            console.error("Failed to save EULA status to localStorage", error);
+        }
+    };
+    
+    if (isLoading || isEulaLoading) {
+         return (
+            <div className="flex items-center justify-center h-screen bg-system-bg-secondary">
+                <p className="text-system-label-secondary">Carregando...</p>
+            </div>
+        );
+    }
+    
+    if (!eulaAccepted) {
+        return <EulaModal onAccept={handleEulaAccept} />;
+    }
+
+    if (!isAuthenticated || !user) {
+        return <AuthScreen />;
+    }
+
+    return <CrmApp userName={user.name} onLogout={logout} />;
 };
+
+
+const App: React.FC = () => {
+    return (
+        <AuthProvider>
+            <AppContent />
+        </AuthProvider>
+    );
+};
+
+
+export default App;
