@@ -122,7 +122,7 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName
             </main>
              <footer className="text-center p-4 text-xs text-system-label-tertiary flex-shrink-0 flex items-center justify-center gap-2">
                 {/* O logo é carregado da pasta local /assets/ */}
-                <img src="/assets/logo.png" alt="i2Sales mini logo" className="h-4 w-auto" />
+                <img src="/assets/logo.png" alt="i2Sales logo" className="h-4 w-auto" />
                 <span>i2Sales CRM v5.0.0</span>
             </footer>
         </div>
