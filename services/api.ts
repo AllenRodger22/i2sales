@@ -1,13 +1,15 @@
+// services/api.ts
+
 import type { Client, TimelineEvent } from '../types';
 import { TimelineEventType, Status } from '../types';
 
+// A URL base do seu backend, que já está correta.
 const API_BASE_URL = 'https://i2sales-backend.onrender.com';
 
 const getToken = () => localStorage.getItem('authToken');
 
 // --- DATA MAPPING FUNCTIONS ---
-
-// Maps API timeline event structure to frontend structure
+// (Todo o seu código de mapeamento permanece exatamente o mesmo)
 const mapApiTimelineEventToFrontend = (apiEvent: any): TimelineEvent => ({
     id: apiEvent.id,
     type: apiEvent.tipo as TimelineEventType,
@@ -16,7 +18,6 @@ const mapApiTimelineEventToFrontend = (apiEvent: any): TimelineEvent => ({
     meta: apiEvent.meta,
 });
 
-// Maps frontend timeline event structure to API structure
 const mapFrontendTimelineEventToApi = (feEvent: TimelineEvent): any => ({
     id: feEvent.id,
     tipo: feEvent.type,
@@ -25,8 +26,6 @@ const mapFrontendTimelineEventToApi = (feEvent: TimelineEvent): any => ({
     meta: feEvent.meta,
 });
 
-
-// Maps the full API client object to the frontend Client type
 export const mapApiToClient = (apiClient: any): Client => ({
     _id: apiClient._id,
     id: apiClient.id_cliente,
@@ -42,7 +41,6 @@ export const mapApiToClient = (apiClient: any): Client => ({
     customFields: apiClient.anexos?.customFields || [],
 });
 
-// Maps the frontend Client type to the structure expected by the API
 export const mapClientToApi = (client: Partial<Client>): any => {
     const apiClient: any = {};
     if (client.name !== undefined) apiClient.nome = client.name;
@@ -53,7 +51,6 @@ export const mapClientToApi = (client: Partial<Client>): any => {
     if (client.isPending !== undefined) apiClient.isPending = client.isPending;
     if (client.followUpDate !== undefined) apiClient.data_followup = client.followUpDate;
 
-    // The 'anexos' field is always sent, even if empty
     apiClient.anexos = {
         customFields: client.customFields || [],
         timeline: (client.timeline || []).map(mapFrontendTimelineEventToApi),
@@ -62,8 +59,9 @@ export const mapClientToApi = (client: Partial<Client>): any => {
     return apiClient;
 };
 
-// --- API FETCH WRAPPER ---
 
+// --- API FETCH WRAPPER ---
+// (Sua função apiRequest permanece exatamente a mesma)
 const apiRequest = async (endpoint: string, method: string, body?: any) => {
     const headers: HeadersInit = { 'Content-Type': 'application/json' };
     const token = getToken();
@@ -89,7 +87,6 @@ const apiRequest = async (endpoint: string, method: string, body?: any) => {
     }
 
     const responseText = await response.text();
-    // Handle empty responses gracefully, which can happen for GET requests on empty collections.
     if (!responseText) {
         return null;
     }
@@ -106,17 +103,29 @@ const apiRequest = async (endpoint: string, method: string, body?: any) => {
 export const apiRegister = (data: any) => apiRequest('/api/auth/register', 'POST', data);
 export const apiLogin = (data: any) => apiRequest('/api/auth/login', 'POST', data);
 
+// ==================================================================
+// ===================  NOVA FUNÇÃO ADICIONADA AQUI ===================
+// ==================================================================
+
+/**
+ * Envia o token do Google para o backend para validação e login/registro.
+ * @param googleToken O token ID recebido do pop-up de login do Google.
+ * @returns A resposta do backend, que deve incluir o token de sessão da sua aplicação.
+ */
+export const apiLoginWithGoogle = (googleToken: string) => {
+    return apiRequest('/api/auth/google', 'POST', { token: googleToken });
+};
+
 
 // --- CLIENT ENDPOINTS ---
+// (Todos os seus endpoints de cliente permanecem exatamente os mesmos)
 export const apiGetClients = async (): Promise<Client[]> => {
     const data = await apiRequest('/api/clientes', 'GET');
-    // If the server returns an empty body (null), return an empty array.
     if (!data) return [];
     return Array.isArray(data) ? data.map(mapApiToClient) : [];
 };
 
 export const apiCreateClient = (clientData: any) => {
-    // Backend generates id_cliente, data_cadastro, ownerId
     const apiPayload = {
         nome: clientData.name,
         telefone: clientData.phone,
