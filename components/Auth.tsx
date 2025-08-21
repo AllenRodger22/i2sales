@@ -62,6 +62,7 @@ export const AuthScreen: React.FC = () => {
             <div className="bg-system-bg-primary rounded-2xl shadow-soft dark:shadow-soft-dark w-full max-w-sm">
                 <div className="p-6 sm:p-8">
                      <div className="text-center mb-6">
+                        {/* O logo é carregado da pasta local /assets/ */}
                         <img src="/assets/logo.png" alt="i2Sales Logo" className="w-40 h-auto mx-auto mb-4" />
                         <h1 className="text-2xl font-bold text-system-label-primary">
                             {isRegister ? 'Crie sua Conta' : 'Bem-vindo(a) de volta!'}
