@@ -15,7 +15,8 @@ interface DashboardProps {
     onClientSelect: (id: string) => void;
     onAddClient: () => void;
     onShowProductivityReport: () => void;
-    addMultipleClients: (clients: Array<Partial<Client> & {name: string, phone: string}>) => void;
+    importClients: (file: File) => Promise<void>;
+    onLogout: () => void;
 }
 
 type KpiFilterType = 'overdue' | 'today' | 'future' | 'active' | null;
@@ -28,18 +29,30 @@ const KpiCard: React.FC<{ title: string; value: number; colorClass: string; isSe
 );
 
 
-export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClientSelect, onAddClient, onShowProductivityReport, addMultipleClients }) => {
-    const today = new Date().toISOString().split('T')[0];
+export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClientSelect, onAddClient, onShowProductivityReport, importClients, onLogout }) => {
     const [filter, setFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all');
     const [kpiFilter, setKpiFilter] = useState<KpiFilterType>('active');
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(now);
+    endOfToday.setHours(23, 59, 59, 999);
+    
     const totalLeads = clients.length;
     const activeClients = clients.filter(c => c.status !== Status.VendaGerada && c.status !== Status.Arquivado).length;
-    const followUpsToday = clients.filter(c => c.status !== Status.Arquivado && c.followUpDate && c.followUpDate.startsWith(today)).length;
-    const overdueFollowUps = clients.filter(c => c.status !== Status.Arquivado && c.followUpDate && c.followUpDate < today).length;
-    const futureFollowUps = clients.filter(c => c.status !== Status.Arquivado && c.followUpDate && c.followUpDate > today).length;
+    
+    const followUpsToday = clients.filter(c => {
+        if (c.status === Status.Arquivado || !c.followUpDate) return false;
+        const d = new Date(c.followUpDate);
+        return d >= startOfToday && d <= endOfToday;
+    }).length;
+
+    const overdueFollowUps = clients.filter(c => c.status !== Status.Arquivado && c.followUpDate && new Date(c.followUpDate) < now).length;
+    const futureFollowUps = clients.filter(c => c.status !== Status.Arquivado && c.followUpDate && new Date(c.followUpDate) > endOfToday).length;
+
 
     const handleKpiFilterClick = (filter: KpiFilterType) => {
         setKpiFilter(prev => (prev === filter ? null : filter));
@@ -47,16 +60,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
 
     const filteredClients = useMemo(() => {
         let tempClients = clients;
+        
+        const now = new Date();
+        const startOfToday = new Date(now);
+        startOfToday.setHours(0, 0, 0, 0);
+        const endOfToday = new Date(now);
+        endOfToday.setHours(23, 59, 59, 999);
 
         switch (kpiFilter) {
             case 'overdue':
-                tempClients = tempClients.filter(c => c.status !== Status.Arquivado && c.followUpDate && c.followUpDate < today);
+                tempClients = tempClients.filter(c => c.status !== Status.Arquivado && c.followUpDate && new Date(c.followUpDate) < now);
                 break;
             case 'today':
-                tempClients = tempClients.filter(c => c.status !== Status.Arquivado && c.followUpDate && c.followUpDate.startsWith(today));
+                tempClients = tempClients.filter(c => {
+                    if (c.status === Status.Arquivado || !c.followUpDate) return false;
+                    const d = new Date(c.followUpDate);
+                    return d >= startOfToday && d <= endOfToday;
+                });
                 break;
             case 'future':
-                tempClients = tempClients.filter(c => c.status !== Status.Arquivado && c.followUpDate && c.followUpDate > today);
+                tempClients = tempClients.filter(c => c.status !== Status.Arquivado && c.followUpDate && new Date(c.followUpDate) > endOfToday);
                 break;
             case 'active':
                 tempClients = tempClients.filter(c => c.status !== Status.VendaGerada && c.status !== Status.Arquivado);
@@ -103,7 +126,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
 
             return false;
         });
-    }, [clients, filter, statusFilter, kpiFilter, today]);
+    }, [clients, filter, statusFilter, kpiFilter]);
 
     const handleExport = () => {
         exportToCsv(clients, userName);
@@ -117,7 +140,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
                 <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     <div>
                         <h1 className="text-4xl font-bold tracking-tight text-system-label-primary">Painel</h1>
-                        <p className="text-system-label-secondary mt-1">Visão geral dos seus clientes.</p>
+                        <p className="text-system-label-secondary mt-1">Bem-vindo(a), {userName}.</p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
                          <Button variant="secondary" onClick={onShowProductivityReport}>
@@ -132,6 +155,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
                             <Icon name="export" className="w-4 h-4 mr-2" />
                             Exportar
                         </Button>
+                        <Button onClick={onLogout} variant="secondary" className="bg-apple-red/10 text-apple-red hover:bg-apple-red/20">Sair</Button>
                         <Button onClick={onAddClient}>
                             <Icon name="plus" className="w-4 h-4 mr-2" />
                             Novo Cliente
@@ -191,7 +215,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
                     </Card>
                  </div>
             </div>
-            {isImportModalOpen && <ImportClientsModal onClose={() => setIsImportModalOpen(false)} onImport={addMultipleClients} />}
+            {isImportModalOpen && <ImportClientsModal onClose={() => setIsImportModalOpen(false)} onImport={importClients} />}
         </div>
     );
 };

@@ -50,9 +50,9 @@ export const ClientList: React.FC<ClientListProps> = ({ clients, onClientSelect 
             <ul role="list" className="divide-y divide-system-separator">
                 {clients.map((client) => (
                     <ClientListItem 
-                        key={client.id} 
+                        key={client._id} 
                         client={client} 
-                        onSelect={() => onClientSelect(client.id)}
+                        onSelect={() => onClientSelect(client._id!)}
                     />
                 ))}
             </ul>

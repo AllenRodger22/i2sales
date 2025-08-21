@@ -1,6 +1,3 @@
-
-
-
 import { useMemo } from 'react';
 import type { Client, ProductivityReportData, DailyProductivity } from '../types';
 import { Status, TimelineEventType } from '../types';
@@ -56,13 +53,24 @@ const calculateFullReport = (clients: Client[]): ProductivityReportData => {
             getDayEntry(dateKey).cne += 1;
         }
 
-        // 3. Tratativas: First status change TO Tratativa
-        const firstTratativa = sortedTimeline.find(e =>
-            e.type === TimelineEventType.StatusChange && e.meta?.to === Status.Tratativa
+        // 3. Tratativas: 
+        // - Counts +1 on the first transition to 'Fluxo de Cadência'.
+        // - If no 'Fluxo de Cadência' transition exists, it counts +1 on the first transition to 'Tratativa'.
+        const firstFluxoCadencia = sortedTimeline.find(e =>
+            e.type === TimelineEventType.StatusChange && e.meta?.to === Status.FluxoDeCadencia
         );
-        if (firstTratativa) {
-            const dateKey = new Date(firstTratativa.date).toISOString().split('T')[0];
+
+        if (firstFluxoCadencia) {
+            const dateKey = new Date(firstFluxoCadencia.date).toISOString().split('T')[0];
             getDayEntry(dateKey).tratativas += 1;
+        } else {
+            const firstTratativa = sortedTimeline.find(e =>
+                e.type === TimelineEventType.StatusChange && e.meta?.to === Status.Tratativa
+            );
+            if (firstTratativa) {
+                const dateKey = new Date(firstTratativa.date).toISOString().split('T')[0];
+                getDayEntry(dateKey).tratativas += 1;
+            }
         }
 
         // 4. Documentação: First status change TO DocCompleta

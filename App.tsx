@@ -4,7 +4,8 @@ import { Dashboard } from './components/Dashboard';
 import { ClientDetail } from './components/ClientDetail';
 import { AddClientModal } from './components/AddClientModal';
 import { ProductivityReport } from './components/BrokerPanel';
-import { UserNamePrompt } from './components/UserNamePrompt';
+import { AuthScreen } from './components/Auth';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TutorialModal } from './components/TutorialModal';
 import { EulaModal } from './components/EulaModal';
 import type { Client } from './types';
@@ -12,64 +13,30 @@ import type { Client } from './types';
 
 type View = { type: 'DASHBOARD' } | { type: 'CLIENT_DETAIL'; clientId: string } | { type: 'PRODUCTIVITY_REPORT' };
 
-const App: React.FC = () => {
-    const { clients, isLoading, addClient, findClientById, updateClient, addTimelineEvent, addMultipleClients, updateTimelineEvent } = useClients();
+const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName, onLogout }) => {
+    const { clients, isLoading, addClient, findClientById, updateClient, addTimelineEvent, importClients, deleteClient, updateTimelineEvent } = useClients();
     
     const [view, setView] = useState<View>({ type: 'DASHBOARD' });
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [userName, setUserName] = useState<string | null>(null);
-    const [isInitialSetupLoading, setIsInitialSetupLoading] = useState(true);
-    const [showTutorial, setShowTutorial] = useState(false);
-    const [eulaAccepted, setEulaAccepted] = useState(false);
-
-    useEffect(() => {
-        try {
-            const eulaIsAccepted = localStorage.getItem('crmEulaAccepted_v1') === 'true';
-            setEulaAccepted(eulaIsAccepted);
-
-            if (eulaIsAccepted) {
-                const storedName = localStorage.getItem('crmUserName');
-                if (storedName) {
-                    setUserName(storedName);
-                }
-                const tutorialSeen = localStorage.getItem('crmTutorialSeen_v1');
-                if (!tutorialSeen) {
-                    setShowTutorial(true);
-                }
-            }
-        } catch (error) {
-            console.error("Failed to load initial setup from localStorage", error);
-        } finally {
-            setIsInitialSetupLoading(false);
-        }
-    }, []);
     
-    const handleEulaAccept = () => {
+    // Tutorial logic remains, but tied to a different local storage key to be per-device
+    const [showTutorial, setShowTutorial] = useState(() => {
         try {
-            localStorage.setItem('crmEulaAccepted_v1', 'true');
-            setEulaAccepted(true);
-        } catch (error) {
-            console.error("Failed to save EULA status to localStorage", error);
+            return localStorage.getItem('crmTutorialSeen_v2') !== 'true';
+        } catch {
+            return true;
         }
-    };
+    });
 
     const handleCloseTutorial = () => {
         try {
-            localStorage.setItem('crmTutorialSeen_v1', 'true');
+            localStorage.setItem('crmTutorialSeen_v2', 'true');
         } catch (error) {
              console.error("Failed to save tutorial status to localStorage", error);
         }
         setShowTutorial(false);
     };
 
-    const handleNameSet = (name: string) => {
-        try {
-            localStorage.setItem('crmUserName', name);
-            setUserName(name);
-        } catch (error) {
-            console.error("Failed to save user name to localStorage", error);
-        }
-    };
 
     const handleClientSelect = (id: string) => {
         setView({ type: 'CLIENT_DETAIL', clientId: id });
@@ -85,26 +52,20 @@ const App: React.FC = () => {
 
     const currentClient = useMemo(() => {
         if (view.type === 'CLIENT_DETAIL') {
+            // Client ID from the backend is `_id`
             return findClientById(view.clientId);
         }
         return null;
     }, [view, findClientById]);
-
-    if (isLoading || isInitialSetupLoading) {
-        return (
+    
+    if (isLoading) {
+         return (
             <div className="flex items-center justify-center h-screen bg-system-bg-secondary">
-                <p className="text-system-label-secondary">Carregando...</p>
+                <p className="text-system-label-secondary">Carregando seus dados...</p>
             </div>
         );
     }
-    
-    if (!eulaAccepted) {
-        return <EulaModal onAccept={handleEulaAccept} />;
-    }
 
-    if (!userName) {
-        return <UserNamePrompt onNameSet={handleNameSet} />;
-    }
 
     const renderContent = () => {
         switch (view.type) {
@@ -113,10 +74,11 @@ const App: React.FC = () => {
                     <Dashboard
                         userName={userName}
                         clients={clients}
-                        onClientSelect={handleClientSelect}
+                        onClientSelect={(id) => handleClientSelect(id)}
                         onAddClient={() => setIsModalOpen(true)}
                         onShowProductivityReport={handleShowProductivityReport}
-                        addMultipleClients={addMultipleClients}
+                        importClients={importClients}
+                        onLogout={onLogout}
                     />
                 );
             case 'CLIENT_DETAIL':
@@ -124,11 +86,16 @@ const App: React.FC = () => {
                     <ClientDetail
                         client={currentClient}
                         onBack={handleBackToDashboard}
-                        updateClient={updateClient}
+                        updateClient={(id, data) => updateClient(id, data)}
                         addTimelineEvent={addTimelineEvent}
                         updateTimelineEvent={updateTimelineEvent}
+                        deleteClient={deleteClient}
                     />
-                ) : null;
+                ) : (
+                     <div className="flex items-center justify-center h-screen bg-system-bg-secondary">
+                        <p className="text-system-label-secondary">Cliente não encontrado. <a href="#" onClick={handleBackToDashboard} className="text-apple-blue">Voltar ao painel.</a></p>
+                    </div>
+                );
             case 'PRODUCTIVITY_REPORT':
                 return (
                     <ProductivityReport
@@ -155,10 +122,65 @@ const App: React.FC = () => {
                 )}
             </main>
              <footer className="text-center p-4 text-xs text-system-label-tertiary flex-shrink-0">
-                i2Sales CRM v4.1.0
+                i2Sales CRM v5.0.0
             </footer>
         </div>
     );
+}
+
+
+const AppContent: React.FC = () => {
+    const { isAuthenticated, user, isLoading, logout } = useAuth();
+    const [eulaAccepted, setEulaAccepted] = useState(false);
+    const [isEulaLoading, setIsEulaLoading] = useState(true);
+
+     useEffect(() => {
+        try {
+            const eulaIsAccepted = localStorage.getItem('crmEulaAccepted_v1') === 'true';
+            setEulaAccepted(eulaIsAccepted);
+        } catch (error) {
+            console.error("Failed to load EULA status from localStorage", error);
+        } finally {
+            setIsEulaLoading(false);
+        }
+    }, []);
+
+    const handleEulaAccept = () => {
+        try {
+            localStorage.setItem('crmEulaAccepted_v1', 'true');
+            setEulaAccepted(true);
+        } catch (error) {
+            console.error("Failed to save EULA status to localStorage", error);
+        }
+    };
+    
+    if (isLoading || isEulaLoading) {
+         return (
+            <div className="flex items-center justify-center h-screen bg-system-bg-secondary">
+                <p className="text-system-label-secondary">Carregando...</p>
+            </div>
+        );
+    }
+    
+    if (!eulaAccepted) {
+        return <EulaModal onAccept={handleEulaAccept} />;
+    }
+
+    if (!isAuthenticated || !user) {
+        return <AuthScreen />;
+    }
+
+    return <CrmApp userName={user.name} onLogout={logout} />;
 };
+
+
+const App: React.FC = () => {
+    return (
+        <AuthProvider>
+            <AppContent />
+        </AuthProvider>
+    );
+};
+
 
 export default App;

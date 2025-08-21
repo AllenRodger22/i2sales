@@ -30,6 +30,7 @@ export interface TimelineEvent {
 }
 
 export interface Client {
+    _id?: string; // Database ID from MongoDB
     id: string;
     name: string;
     phone: string;

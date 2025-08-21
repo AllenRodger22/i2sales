@@ -11,14 +11,14 @@ interface KanbanCardProps {
 
 const KanbanCard: React.FC<KanbanCardProps> = ({ client, onClientSelect }) => {
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-        e.dataTransfer.setData('clientId', client.id);
+        e.dataTransfer.setData('clientId', client._id!);
     };
 
     return (
         <div
             draggable
             onDragStart={handleDragStart}
-            onClick={() => onClientSelect(client.id)}
+            onClick={() => onClientSelect(client._id!)}
             className="bg-system-bg-primary rounded-xl p-4 shadow-soft dark:shadow-soft-dark cursor-pointer hover:ring-2 hover:ring-apple-blue transition-all space-y-2"
         >
             <div className="flex items-center justify-between">
@@ -74,7 +74,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, clients, onClientSe
             </div>
             <div className={`flex-grow p-2 space-y-3 overflow-y-auto min-h-0 scrollbar-hide rounded-b-2xl transition-colors ${isDragOver ? 'bg-apple-blue/10' : ''}`}>
                 {clients.map(client => (
-                    <KanbanCard key={client.id} client={client} onClientSelect={onClientSelect} />
+                    <KanbanCard key={client._id} client={client} onClientSelect={onClientSelect} />
                 ))}
             </div>
         </div>
@@ -93,7 +93,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ clients, onClientSelec
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>, newStatus: Status) => {
         const clientId = e.dataTransfer.getData('clientId');
-        const client = clients.find(c => c.id === clientId);
+        const client = clients.find(c => c._id === clientId);
 
         if (client && newStatus === Status.PrimeiroAtendimento && client.timeline.length > 1) {
             setDragOverColumn(null);

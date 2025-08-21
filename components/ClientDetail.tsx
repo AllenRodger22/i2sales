@@ -15,6 +15,7 @@ interface ClientDetailProps {
     updateClient: (id: string, data: Partial<Client>) => void;
     addTimelineEvent: (clientId: string, event: Omit<TimelineEvent, 'id' | 'date'>) => void;
     updateTimelineEvent: (clientId: string, eventId: string, updatedData: Partial<Omit<TimelineEvent, 'id'>>) => void;
+    deleteClient: (id: string) => Promise<boolean>;
 }
 
 const inputClasses = "block w-full bg-system-bg-tertiary dark:bg-system-bg-secondary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
@@ -63,31 +64,31 @@ const TimelineItem: React.FC<{ event: TimelineEvent; onEdit: (event: TimelineEve
 };
 
 
-export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, updateClient, addTimelineEvent, updateTimelineEvent }) => {
+export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, updateClient, addTimelineEvent, updateTimelineEvent, deleteClient }) => {
     const [observation, setObservation] = useState('');
     const [isLogCallModalOpen, setIsLogCallModalOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<TimelineEvent | null>(null);
+    const clientId = client._id!;
     
-    const getLocalDate = (isoString: string | undefined): string => {
+    const getLocalDateTimePickerString = (isoString: string | undefined): string => {
         if (!isoString) return '';
         try {
             const d = new Date(isoString);
             if (isNaN(d.getTime())) return '';
-            // Get date in local timezone for input[type=date] which expects YYYY-MM-DD
-            const offset = d.getTimezoneOffset();
-            const localDate = new Date(d.getTime() - (offset*60*1000));
-            return localDate.toISOString().split('T')[0];
+            const pad = (num: number) => String(num).padStart(2, '0');
+            // Format for datetime-local input, which wants "YYYY-MM-DDTHH:mm"
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
         } catch (e) {
             return '';
         }
     };
 
-    const [followUpDate, setFollowUpDate] = useState(getLocalDate(client.followUpDate));
+    const [followUpDate, setFollowUpDate] = useState(getLocalDateTimePickerString(client.followUpDate));
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const statusInfo = getStatusInfo(client.status);
 
     useEffect(() => {
-        setFollowUpDate(getLocalDate(client.followUpDate));
+        setFollowUpDate(getLocalDateTimePickerString(client.followUpDate));
     }, [client.followUpDate]);
 
     const sortedTimeline = useMemo(() => {
@@ -123,7 +124,7 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
 
     const handleSaveNote = () => {
         if (!observation.trim()) return;
-        addTimelineEvent(client.id, { type: TimelineEventType.Anotacao, content: observation });
+        addTimelineEvent(clientId, { type: TimelineEventType.Anotacao, content: observation });
         setObservation('');
     };
 
@@ -137,8 +138,8 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
         const oldStatus = client.status;
         const oldStatusLabel = getStatusInfo(oldStatus).label;
         const newStatusLabel = STATUS_OPTIONS.find(s => s.value === newStatus)?.label || newStatus;
-        updateClient(client.id, { status: newStatus });
-        addTimelineEvent(client.id, {
+        updateClient(clientId, { status: newStatus });
+        addTimelineEvent(clientId, {
             type: TimelineEventType.StatusChange,
             content: `Status alterado de '${oldStatusLabel}' para '${newStatusLabel}'`,
             meta: { from: oldStatus, to: newStatus }
@@ -148,32 +149,23 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
     const handleFollowUpSave = () => {
         if (!followUpDate) {
             if (client.followUpDate) {
-                const removalEvent: TimelineEvent = { id: `${new Date().toISOString()}-tl-event`, date: new Date().toISOString(), type: TimelineEventType.FollowUp, content: `Follow-up removido.` };
-                updateClient(client.id, { followUpDate: undefined, timeline: [removalEvent, ...(client.timeline || [])] });
+                updateClient(clientId, { followUpDate: undefined });
+                addTimelineEvent(clientId, { type: TimelineEventType.FollowUp, content: `Follow-up removido.` });
             }
             return;
         }
-        const date = new Date(`${followUpDate}T12:00:00.000Z`); // Use noon UTC to avoid timezone issues
+        const date = new Date(followUpDate); // Parses YYYY-MM-DDTHH:mm as local time
         if (isNaN(date.getTime())) return;
-        const newTimeline = [...(client.timeline || [])];
-        const sortedTimelineForUpdate = [...newTimeline].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        for (const event of sortedTimelineForUpdate) {
-            if (event.type === TimelineEventType.FollowUp && event.content.startsWith('Follow-up agendado para') && !event.content.includes('[FEITO]') && !event.content.includes('[SUBSTITUÍDO]')) {
-                const eventInNewTimeline = newTimeline.find(e => e.id === event.id);
-                if (eventInNewTimeline) {
-                    eventInNewTimeline.content = `${eventInNewTimeline.content} [SUBSTITUÍDO]`;
-                    break;
-                }
-            }
-        }
+        
         const dateInISO = date.toISOString();
-        const formattedDate = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
-        const newEvent: TimelineEvent = { id: `${new Date().toISOString()}-tl-event`, date: new Date().toISOString(), type: TimelineEventType.FollowUp, content: `Follow-up agendado para ${formattedDate}` };
-        updateClient(client.id, { followUpDate: dateInISO, timeline: [newEvent, ...newTimeline] });
+        const formattedDate = date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        updateClient(clientId, { followUpDate: dateInISO });
+        addTimelineEvent(clientId, { type: TimelineEventType.FollowUp, content: `Follow-up agendado para ${formattedDate}` });
     };
 
     const handleWhatsAppClick = () => {
-        addTimelineEvent(client.id, { type: TimelineEventType.WhatsApp, content: 'Iniciado contato via WhatsApp.' });
+        addTimelineEvent(clientId, { type: TimelineEventType.WhatsApp, content: 'Iniciado contato via WhatsApp.' });
     };
 
     const handleCallClick = () => {
@@ -185,24 +177,31 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
         if (observation) {
             content += ` - ${observation}`;
         }
-        addTimelineEvent(client.id, { type: TimelineEventType.Ligacao, content: content });
+        addTimelineEvent(clientId, { type: TimelineEventType.Ligacao, content: content });
     };
 
     const handleSaveTimelineEvent = (eventId: string, updatedData: Partial<Omit<TimelineEvent, 'id'>>) => {
-        updateTimelineEvent(client.id, eventId, updatedData);
+        updateTimelineEvent(clientId, eventId, updatedData);
         setEditingEvent(null);
     };
 
     const handleSaveClient = (updatedData: Partial<Client>) => {
-        updateClient(client.id, updatedData);
-        addTimelineEvent(client.id, { type: TimelineEventType.Anotacao, content: "Dados do cliente atualizados." });
+        updateClient(clientId, updatedData);
+        addTimelineEvent(clientId, { type: TimelineEventType.Anotacao, content: "Dados do cliente atualizados." });
         setIsEditModalOpen(false);
     };
 
     const handleTogglePendency = () => {
         const newPendingState = !client.isPending;
-        updateClient(client.id, { isPending: newPendingState });
-        addTimelineEvent(client.id, { type: TimelineEventType.Anotacao, content: newPendingState ? 'Pendência adicionada.' : 'Pendência resolvida.' });
+        updateClient(clientId, { isPending: newPendingState });
+        addTimelineEvent(clientId, { type: TimelineEventType.Anotacao, content: newPendingState ? 'Pendência adicionada.' : 'Pendência resolvida.' });
+    };
+
+    const handleDeleteClient = async () => {
+        const wasDeleted = await deleteClient(clientId);
+        if (wasDeleted) {
+            onBack();
+        }
     };
 
     return (
@@ -294,9 +293,14 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
                                 </div>
                                  <div>
                                     <label className="text-sm font-medium text-system-label-secondary">Agendar Follow-up</label>
-                                    <input type="date" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} className={`mt-1 ${inputClasses}`} />
+                                    <input type="datetime-local" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} className={`mt-1 ${inputClasses}`} />
                                     <Button onClick={handleFollowUpSave} className="mt-2 w-full">Salvar Data</Button>
                                 </div>
+                                 <div className="border-t border-system-separator pt-6">
+                                    <Button onClick={handleDeleteClient} variant="secondary" className="w-full bg-apple-red/10 text-apple-red hover:bg-apple-red/20">
+                                        <Icon name="trash-2" className="w-4 h-4 mr-2" /> Deletar Cliente
+                                    </Button>
+                                 </div>
                             </div>
                         </Card>
                         <Card>
