@@ -22,7 +22,7 @@ const calculateFullReport = (clients: Client[]): ProductivityReportData => {
     };
 
     clients.forEach(client => {
-        // Sort timeline oldest to newest to find the *first* event of each type
+        // Sort timeline oldest to newest to find the *first* event of each type for most metrics
         const sortedTimeline = [...(client.timeline || [])].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         // 1. Ligações: First call of type 'Ligação'
@@ -82,14 +82,22 @@ const calculateFullReport = (clients: Client[]): ProductivityReportData => {
             getDayEntry(dateKey).documentacao += 1;
         }
 
-        // 5. Vendas: First status change TO VendaGerada
-        const firstVenda = sortedTimeline.find(e =>
-            e.type === TimelineEventType.StatusChange && e.meta?.to === Status.VendaGerada
-        );
-        if (firstVenda) {
-            const dateKey = new Date(firstVenda.date).toISOString().split('T')[0];
-            getDayEntry(dateKey).vendas += 1;
-        }
+        // 5. Vendas: Process all status changes to and from 'Venda Gerada'
+        sortedTimeline.forEach(e => {
+            if (e.type === TimelineEventType.StatusChange) {
+                const dateKey = new Date(e.date).toISOString().split('T')[0];
+                
+                // Moved INTO VendaGerada from a different status
+                if (e.meta?.to === Status.VendaGerada && e.meta?.from !== Status.VendaGerada) {
+                    getDayEntry(dateKey).vendas += 1;
+                }
+                
+                // Moved OUT OF VendaGerada to a different status
+                if (e.meta?.from === Status.VendaGerada && e.meta?.to !== Status.VendaGerada) {
+                    getDayEntry(dateKey).vendas -= 1;
+                }
+            }
+        });
     });
 
     return report;
@@ -97,6 +105,8 @@ const calculateFullReport = (clients: Client[]): ProductivityReportData => {
 
 
 export const useProductivityReport = (clients: Client[]) => {
+    // This comment is to ensure archived clients are included, preserving historical data integrity.
+    // The calculateFullReport function intentionally processes all clients, regardless of their current status.
     const fullReport = useMemo(() => calculateFullReport(clients), [clients]);
 
     const getReportForPeriod = (startDate: string, endDate: string) => {
