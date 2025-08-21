@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './Button';
-import { I2SALES_LOGO_URL } from '../assets/logo';
+import { Icon } from './Icon';
 
 const inputClasses = "mt-1 block w-full bg-system-bg-tertiary dark:bg-system-bg-secondary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
 
@@ -59,10 +59,10 @@ export const AuthScreen: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-system-bg-secondary flex justify-center items-center z-50 p-4">
-            <div className="bg-system-bg-primary rounded-2xl shadow-soft dark:shadow-soft-dark w-full max-w-sm p-6 sm:p-8 space-y-6">
-                <div className="text-center space-y-4">
-                    <img src={I2SALES_LOGO_URL} alt="i2Sales Logo" className="w-24 h-auto mx-auto" />
-                    <div>
+            <div className="bg-system-bg-primary rounded-2xl shadow-soft dark:shadow-soft-dark w-full max-w-sm">
+                <div className="p-6 sm:p-8">
+                     <div className="text-center mb-6">
+                        <img src="/assets/logo.png" alt="i2Sales Logo" className="w-40 h-auto mx-auto mb-4" />
                         <h1 className="text-2xl font-bold text-system-label-primary">
                             {isRegister ? 'Crie sua Conta' : 'Bem-vindo(a) de volta!'}
                         </h1>
@@ -70,11 +70,10 @@ export const AuthScreen: React.FC = () => {
                             {isRegister ? 'Preencha os dados para começar.' : 'Faça login para acessar seu painel.'}
                         </p>
                     </div>
-                </div>
 
-                <AuthForm isRegister={isRegister} />
-                
-                <div className="text-center pt-2">
+                    <AuthForm isRegister={isRegister} />
+                </div>
+                <div className="p-4 bg-system-bg-secondary rounded-b-2xl text-center">
                     <button onClick={() => setIsRegister(!isRegister)} className="text-sm text-apple-blue font-semibold hover:underline">
                         {isRegister ? 'Já tem uma conta? Faça login.' : 'Não tem uma conta? Registre-se.'}
                     </button>
