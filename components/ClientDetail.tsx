@@ -207,6 +207,25 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
         addLocalTimelineEvent({ type: TimelineEventType.Anotacao, content: newPendingState ? 'Pendência adicionada.' : 'Pendência resolvida.' });
     };
 
+    const handleArchive = () => {
+        handleStatusChange(Status.Arquivado);
+    };
+
+    const handlePermanentDelete = async () => {
+        const confirmation = window.confirm(
+            'Você tem certeza que deseja deletar este cliente permanentemente? Esta ação não pode ser desfeita.'
+        );
+        if (confirmation) {
+            setIsSaving(true);
+            const success = await deleteClient(client._id!);
+            if (success) {
+                onBack();
+            } else {
+                setIsSaving(false);
+            }
+        }
+    };
+
     const handleBack = async () => {
         const hasChanges = JSON.stringify(client) !== JSON.stringify(editedClient);
         if (hasChanges) {
@@ -220,13 +239,6 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
                 setIsSaving(false);
             }
         } else {
-            onBack();
-        }
-    };
-
-    const handleDelete = async () => {
-        const wasDeleted = await deleteClient(client._id!);
-        if (wasDeleted) {
             onBack();
         }
     };
@@ -326,14 +338,31 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
                                     ><Icon name="alert-triangle" className="w-4 h-4 mr-2" />{editedClient.isPending ? 'Resolver Pendência' : 'Marcar Pendência'}</Button>
                                 </div>
                                  <div>
-                                    <label className="text-sm font-medium text-system-label-secondary">Agendar Follow-up</label>
-                                    <input type="datetime-local" value={followUpDateForInput} onChange={handleFollowUpChange} onBlur={handleFollowUpSave} className={`mt-1 ${inputClasses}`} />
-                                </div>
-                                 <div className="border-t border-system-separator pt-6">
-                                    <Button onClick={handleDelete} variant="secondary" className="w-full bg-apple-red/10 text-apple-red hover:bg-apple-red/20">
-                                        <Icon name="trash-2" className="w-4 h-4 mr-2" /> Deletar Cliente
+                                    <label htmlFor="follow-up-date" className="text-sm font-medium text-system-label-secondary">Agendar Follow-up</label>
+                                    <input id="follow-up-date" type="datetime-local" value={followUpDateForInput} onChange={handleFollowUpChange} className={`mt-1 ${inputClasses}`} />
+                                    <Button onClick={handleFollowUpSave} variant="secondary" className="mt-2 w-full">
+                                        <Icon name="calendar" className="w-4 h-4 mr-2"/>
+                                        Agendar Follow-up
                                     </Button>
-                                 </div>
+                                </div>
+                            </div>
+                             <div className="border-t border-system-separator mt-6 pt-4">
+                                {editedClient.status === Status.Arquivado ? (
+                                    <Button
+                                        onClick={handlePermanentDelete}
+                                        disabled={isSaving}
+                                        variant="ghost"
+                                        className="w-full !text-apple-red hover:!bg-apple-red/10 active:!bg-apple-red/20"
+                                    >
+                                        <Icon name="trash-2" className="w-4 h-4 mr-2" />
+                                        Deletar Permanentemente
+                                    </Button>
+                                ) : (
+                                    <Button onClick={handleArchive} variant="secondary" className="w-full">
+                                        <Icon name="archive" className="w-4 h-4 mr-2" />
+                                        Arquivar Cliente
+                                    </Button>
+                                )}
                             </div>
                         </Card>
                         <Card>

@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface IconProps {
-    name: 'plus' | 'user' | 'calendar' | 'arrow-left' | 'export' | 'x' | 'clock' | 'message-circle' | 'phone' | 'edit-3' | 'list' | 'bar-chart-2' | 'save' | 'trash-2' | 'sheet' | 'upload' | 'sun' | 'moon' | 'whatsapp' | 'dollar-sign' | 'arrow-up-right' | 'users' | 'alert-triangle' | 'phone-off';
+    name: 'plus' | 'user' | 'calendar' | 'arrow-left' | 'export' | 'x' | 'clock' | 'message-circle' | 'phone' | 'edit-3' | 'list' | 'bar-chart-2' | 'save' | 'trash-2' | 'sheet' | 'upload' | 'sun' | 'moon' | 'whatsapp' | 'dollar-sign' | 'arrow-up-right' | 'users' | 'alert-triangle' | 'phone-off' | 'archive';
     className?: string;
     title?: string;
 }
@@ -155,6 +155,12 @@ export const Icon: React.FC<IconProps> = ({ name, className = 'w-6 h-6', title }
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
             </svg>
         ),
+        archive: (
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+                {title && <title>{title}</title>}
+                <polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line>
+            </svg>
+        )
     };
 
     return icons[name] || null;

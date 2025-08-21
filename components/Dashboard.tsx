@@ -175,12 +175,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
                             Exportar
                         </Button>
                         <Button onClick={onLogout} variant="secondary">Sair</Button>
-                         {user?.role === 'admin' && (
-                            <Button onClick={handleBulkDelete} variant="secondary" className="bg-apple-red text-white hover:bg-apple-red/90">
-                                <Icon name="trash-2" className="w-4 h-4 mr-2" />
-                                Deletar Tudo
-                            </Button>
-                        )}
                         <Button onClick={onAddClient}>
                             <Icon name="plus" className="w-4 h-4 mr-2" />
                             Novo Cliente
