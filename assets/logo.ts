@@ -1,0 +1,1 @@
+export const I2SALES_LOGO_URL = 'PLACEHOLDER';

@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TutorialModal } from './components/TutorialModal';
 import { EulaModal } from './components/EulaModal';
 import type { Client } from './types';
+import { I2SALES_LOGO_URL } from './assets/logo';
 
 
 type View = { type: 'DASHBOARD' } | { type: 'CLIENT_DETAIL'; clientId: string } | { type: 'PRODUCTIVITY_REPORT' };
@@ -92,7 +93,7 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName
                     />
                 ) : (
                      <div className="flex items-center justify-center h-screen bg-system-bg-secondary">
-                        <p className="text-system-label-secondary">Cliente não encontrado. <a href="#" onClick={handleBackToDashboard} className="text-apple-blue">Voltar ao painel.</a></p>
+                        <p className="text-system-label-secondary">Cliente não encontrado. <a href="#" onClick={handleBackToDashboard} className="text-apple-blue">Voltar ao panel.</a></p>
                     </div>
                 );
             case 'PRODUCTIVITY_REPORT':
@@ -120,8 +121,9 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName
                     />
                 )}
             </main>
-             <footer className="text-center p-4 text-xs text-system-label-tertiary flex-shrink-0">
-                i2Sales CRM v5.0.0
+             <footer className="text-center p-4 text-xs text-system-label-tertiary flex-shrink-0 flex items-center justify-center gap-2">
+                <img src={I2SALES_LOGO_URL} alt="i2Sales mini logo" className="h-4 w-auto" />
+                <span>i2Sales CRM v5.0.0</span>
             </footer>
         </div>
     );
