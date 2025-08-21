@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TutorialModal } from './components/TutorialModal';
 import { EulaModal } from './components/EulaModal';
 import type { Client } from './types';
+import { LogoImage } from './components/LogoImage';
 
 
 type View = { type: 'DASHBOARD' } | { type: 'CLIENT_DETAIL'; clientId: string } | { type: 'PRODUCTIVITY_REPORT' };
@@ -121,8 +122,7 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName
                 )}
             </main>
              <footer className="text-center p-4 text-xs text-system-label-tertiary flex-shrink-0 flex items-center justify-center gap-2">
-                {/* O logo é carregado da pasta local /assets/ */}
-                <img src="/assets/logo.png" alt="i2Sales logo" className="h-4 w-auto" />
+                <LogoImage className="h-4 w-auto" />
                 <span>i2Sales CRM v5.0.0</span>
             </footer>
         </div>
