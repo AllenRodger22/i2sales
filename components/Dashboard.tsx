@@ -25,7 +25,7 @@ interface DashboardProps {
     deleteAllClients: () => Promise<void>;
 }
 
-type KpiFilterType = 'overdue' | 'today' | 'future' | 'active' | null;
+type KpiFilterType = 'overdue' | 'today' | 'future' | 'primeiro-atendimento' | null;
 
 const KpiCard: React.FC<{ title: string; value: number; colorClass: string; isSelected: boolean; onClick: () => void; }> = ({ title, value, colorClass, isSelected, onClick }) => (
     <div onClick={onClick} className={`p-2 rounded-lg cursor-pointer transition-all ${isSelected ? 'ring-2 ring-apple-blue' : 'hover:bg-system-fill-primary'}`}>
@@ -39,7 +39,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
     const { user } = useAuth();
     const [filter, setFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all');
-    const [kpiFilter, setKpiFilter] = useState<KpiFilterType>('active');
+    const [kpiFilter, setKpiFilter] = useState<KpiFilterType>(null);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
     const now = new Date();
@@ -49,7 +49,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
     endOfToday.setHours(23, 59, 59, 999);
     
     const totalLeads = clients.length;
-    const activeClients = clients.filter(c => c.status !== Status.VendaGerada && c.status !== Status.Arquivado).length;
+    const primeiroAtendimentoCount = clients.filter(c => c.status === Status.PrimeiroAtendimento).length;
     
     const followUpsToday = clients.filter(c => {
         if (c.status === Status.Arquivado || !c.followUpDate) return false;
@@ -88,8 +88,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
             case 'future':
                 tempClients = tempClients.filter(c => c.status !== Status.Arquivado && c.followUpDate && new Date(c.followUpDate) > endOfToday);
                 break;
-            case 'active':
-                tempClients = tempClients.filter(c => c.status !== Status.VendaGerada && c.status !== Status.Arquivado);
+            case 'primeiro-atendimento':
+                tempClients = tempClients.filter(c => c.status === Status.PrimeiroAtendimento);
                 break;
         }
 
@@ -194,9 +194,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
                         </div>
                     </Card>
 
-                    <Card onClick={() => handleKpiFilterClick('active')} className={`text-center flex flex-col justify-center cursor-pointer transition-all ${kpiFilter === 'active' ? 'ring-2 ring-apple-blue' : ''}`}>
-                        <h3 className="text-sm font-semibold text-system-label-secondary">Leads Ativos</h3>
-                        <p className="text-4xl font-bold text-system-label-primary mt-2">{activeClients}</p>
+                    <Card onClick={() => handleKpiFilterClick('primeiro-atendimento')} className={`text-center flex flex-col justify-center cursor-pointer transition-all ${kpiFilter === 'primeiro-atendimento' ? 'ring-2 ring-apple-blue' : ''}`}>
+                        <h3 className="text-sm font-semibold text-system-label-secondary">Primeiro Atendimento</h3>
+                        <p className="text-4xl font-bold text-system-label-primary mt-2">{primeiroAtendimentoCount}</p>
                     </Card>
 
                     <Card onClick={() => setKpiFilter(null)} className={`text-center flex flex-col justify-center cursor-pointer transition-all ${kpiFilter === null ? 'ring-2 ring-apple-blue' : ''}`}>

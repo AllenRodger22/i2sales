@@ -6,10 +6,8 @@ import { AddClientModal } from './components/AddClientModal';
 import { ProductivityReport } from './components/BrokerPanel';
 import { AuthScreen } from './components/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { TutorialModal } from './components/TutorialModal';
 import { EulaModal } from './components/EulaModal';
 import type { Client } from './types';
-import { LogoImage } from './components/LogoImage';
 
 
 type View = { type: 'DASHBOARD' } | { type: 'CLIENT_DETAIL'; clientId: string } | { type: 'PRODUCTIVITY_REPORT' };
@@ -19,25 +17,6 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName
     
     const [view, setView] = useState<View>({ type: 'DASHBOARD' });
     const [isModalOpen, setIsModalOpen] = useState(false);
-    
-    // Tutorial logic remains, but tied to a different local storage key to be per-device
-    const [showTutorial, setShowTutorial] = useState(() => {
-        try {
-            return localStorage.getItem('crmTutorialSeen_v2') !== 'true';
-        } catch {
-            return true;
-        }
-    });
-
-    const handleCloseTutorial = () => {
-        try {
-            localStorage.setItem('crmTutorialSeen_v2', 'true');
-        } catch (error) {
-             console.error("Failed to save tutorial status to localStorage", error);
-        }
-        setShowTutorial(false);
-    };
-
 
     const handleClientSelect = (id: string) => {
         setView({ type: 'CLIENT_DETAIL', clientId: id });
@@ -112,7 +91,6 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName
     return (
         <div className="min-h-screen bg-system-bg-secondary flex flex-col">
             <main className="flex-grow h-full">
-                {showTutorial && <TutorialModal onClose={handleCloseTutorial} />}
                 {renderContent()}
                 {isModalOpen && (
                     <AddClientModal
@@ -122,7 +100,6 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName
                 )}
             </main>
              <footer className="text-center p-4 text-xs text-system-label-tertiary flex-shrink-0 flex items-center justify-center gap-2">
-                <LogoImage className="h-4 w-auto" />
                 <span>i2Sales CRM v5.0.0</span>
             </footer>
         </div>

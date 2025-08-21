@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './Button';
 import { Icon } from './Icon';
-import { LogoImage } from './LogoImage';
 
 const inputClasses = "mt-1 block w-full bg-system-bg-tertiary dark:bg-system-bg-secondary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
 
@@ -63,7 +62,9 @@ export const AuthScreen: React.FC = () => {
             <div className="bg-system-bg-primary rounded-2xl shadow-soft dark:shadow-soft-dark w-full max-w-sm">
                 <div className="p-6 sm:p-8">
                      <div className="text-center mb-6">
-                        <LogoImage className="w-12 h-auto mx-auto mb-4" />
+                        <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-apple-orange/15 flex items-center justify-center">
+                            <Icon name="arrow-up-right" className="w-8 h-8 text-apple-orange" />
+                        </div>
                         <h1 className="text-2xl font-bold text-system-label-primary">
                             {isRegister ? 'Crie sua Conta' : 'Bem-vindo(a) de volta!'}
                         </h1>
