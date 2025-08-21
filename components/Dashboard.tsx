@@ -15,7 +15,7 @@ interface DashboardProps {
     onClientSelect: (id: string) => void;
     onAddClient: () => void;
     onShowProductivityReport: () => void;
-    importClients: (file: File) => Promise<void>;
+    importClients: (file: File, onProgress: (progress: { processed: number, total: number }) => void) => Promise<void>;
     onLogout: () => void;
 }
 

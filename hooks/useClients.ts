@@ -6,14 +6,116 @@ import {
     apiGetClients, 
     apiCreateClient, 
     apiUpdateClient, 
-    apiDeleteClient,
-    apiUploadClients
+    apiDeleteClient
 } from '../services/api';
 
 
 const sanitizeText = (text: string | undefined): string => {
     if (!text) return '';
     return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[´`~^]/g, '');
+};
+
+// Helper function to parse CSV from the old app format
+const parseLegacyCsv = (csvText: string): Partial<Client>[] => {
+    const lines = csvText.trim().replace(/^\uFEFF/, '').split('\n');
+    if (lines.length < 2) return [];
+
+    const headers = lines[0].split(',').map(h => h.trim());
+    const dataRows = lines.slice(1);
+    const clients: Partial<Client>[] = [];
+
+    const parseBrDate = (dateStr: string | undefined): string | undefined => {
+        if (!dateStr || !dateStr.trim()) return undefined;
+        // Format: "19/08/2025, 13:47:46" or "21/08/2025, 09:00:00"
+        const parts = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4}),?\s*(\d{2}):(\d{2}):(\d{2})?/);
+        if (!parts) {
+             try {
+                const d = new Date(dateStr);
+                if (!isNaN(d.getTime())) return d.toISOString();
+            } catch (e) {}
+            console.warn("Could not parse date:", dateStr);
+            return undefined;
+        };
+        const [, day, month, year, hour, minute, second] = parts;
+        return new Date(`${year}-${month}-${day}T${hour || '00'}:${minute || '00'}:${second || '00'}`).toISOString();
+    };
+
+
+    for (const line of dataRows) {
+        if (!line.trim()) continue;
+
+        const values = [];
+        let inQuotes = false;
+        let field = '';
+        let ptr = 0;
+        
+        while (ptr < line.length) {
+            const char = line[ptr];
+            if (char === '"') {
+                if (inQuotes && line[ptr + 1] === '"') {
+                    field += '"';
+                    ptr++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === ',' && !inQuotes) {
+                values.push(field);
+                field = '';
+            } else {
+                field += char;
+            }
+            ptr++;
+        }
+        values.push(field);
+
+
+        if (values.length !== headers.length) {
+            console.warn("Skipping malformed CSV row:", line);
+            continue;
+        }
+
+        const row = headers.reduce((obj, header, i) => {
+            obj[header] = values[i];
+            return obj;
+        }, {} as Record<string, string>);
+
+        const anexosStr = row['Anexos (JSON)'];
+        let timeline: TimelineEvent[] = [];
+        let customFields: { name: string, value: string }[] = [];
+
+        if (anexosStr) {
+            try {
+                const parsedAnexos = JSON.parse(anexosStr.replace(/""/g, '"'));
+                timeline = parsedAnexos.timeline || [];
+                customFields = parsedAnexos.customFields || [];
+            } catch (e) {
+                console.error("Error parsing Anexos JSON for row:", row, e);
+            }
+        }
+        
+        if (!timeline.some(e => e.content?.includes('importação'))) {
+            timeline.unshift({
+                id: `${new Date(parseBrDate(row['Data Cadastro']) || Date.now()).toISOString()}-tl-import`,
+                type: TimelineEventType.Observacao,
+                content: 'Cliente cadastrado via importação.',
+                date: new Date(parseBrDate(row['Data Cadastro']) || Date.now()).toISOString()
+            });
+        }
+
+        const client: Partial<Client> = {
+            name: row['Nome'] || 'Nome não informado',
+            phone: row['Telefone'] || '',
+            email: row['E-mail'] || '',
+            origin: row['Origem'] || 'Importado',
+            status: (Object.values(Status).find(s => s === row['Status']) || Status.PrimeiroAtendimento) as Status,
+            createdAt: parseBrDate(row['Data Cadastro']) || new Date().toISOString(),
+            followUpDate: parseBrDate(row['Data Follow-up']),
+            timeline,
+            customFields,
+        };
+        clients.push(client);
+    }
+    return clients;
 };
 
 export const useClients = () => {
@@ -29,7 +131,6 @@ export const useClients = () => {
             setClients(serverClients);
         } catch (error) {
             console.error("Failed to fetch clients from server", error);
-            // Optionally, handle logout on 401/403 errors
         } finally {
             setIsLoading(false);
         }
@@ -56,18 +157,44 @@ export const useClients = () => {
             }],
         };
         await apiCreateClient(newClientData);
-        await fetchClients(); // Refetch to get the new client with its server-generated ID
+        await fetchClients();
     }, [fetchClients]);
     
-    const importClients = useCallback(async (file: File) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        await apiUploadClients(formData);
+    const importClients = useCallback(async (file: File, onProgress?: (progress: { processed: number, total: number }) => void) => {
+        const fileContent = await file.text();
+        const clientsToImport = parseLegacyCsv(fileContent);
+        
+        const total = clientsToImport.length;
+        let processed = 0;
+        
+        onProgress?.({ processed, total });
+        
+        for (const clientData of clientsToImport) {
+            try {
+                await apiCreateClient({
+                    name: clientData.name,
+                    phone: clientData.phone,
+                    email: clientData.email,
+                    origin: clientData.origin,
+                    status: clientData.status,
+                    isPending: clientData.isPending,
+                    followUpDate: clientData.followUpDate,
+                    customFields: clientData.customFields,
+                    timeline: clientData.timeline,
+                });
+            } catch(error) {
+                 console.error(`Failed to import client ${clientData.name}:`, error);
+            } finally {
+                processed++;
+                onProgress?.({ processed, total });
+            }
+        }
+        
         await fetchClients();
     }, [fetchClients]);
 
+
     const findClientById = useCallback((id: string) => {
-        // Now finds by `_id` which is the unique database identifier
         return clients.find(client => client._id === id);
     }, [clients]);
 
@@ -84,13 +211,10 @@ export const useClients = () => {
         }
         
         await apiUpdateClient(id, sanitizedData);
-        // Optimistic update for faster UI response
         setClients(prevClients => prevClients.map(client =>
             client._id === id ? { ...client, ...sanitizedData } : client
         ));
-        // Optional: refetch for consistency, but optimistic is faster
-        // await fetchClients();
-    }, [fetchClients]);
+    }, []);
 
     const addTimelineEvent = useCallback(async (clientId: string, event: Omit<TimelineEvent, 'id' | 'date'>) => {
         const client = clients.find(c => c._id === clientId);
