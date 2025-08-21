@@ -172,13 +172,33 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
 
         if (currentFollowUp === newFollowUp) return;
 
-        if (!newFollowUp) {
-            addLocalTimelineEvent({ type: TimelineEventType.FollowUp, content: `Follow-up removido.` });
-        } else {
-            const formattedDate = new Date(newFollowUp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-            addLocalTimelineEvent({ type: TimelineEventType.FollowUp, content: `Follow-up agendado para ${formattedDate}` });
-        }
-        // State is already updated via handleFollowUpChange, this just adds the timeline event
+        setEditedClient(prev => {
+            // This logic ensures only one follow-up is active at any time.
+            // First, find and mark all currently active follow-ups as superseded.
+            const timelineWithSupersededFollowUps = (prev.timeline || []).map(event => {
+                if (event.type === TimelineEventType.FollowUp && !event.content.includes('[SUBSTITUIDO]')) {
+                    return { ...event, content: `${event.content} [SUBSTITUIDO]` };
+                }
+                return event;
+            });
+
+            // Second, create a new timeline event for the current action (scheduling or removing).
+            const newEventContent = newFollowUp
+                ? `Follow-up agendado para ${new Date(newFollowUp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                : 'Follow-up removido.';
+
+            const newFollowUpEvent: TimelineEvent = {
+                id: `${new Date().toISOString()}-tl-event-${Math.random()}`,
+                type: TimelineEventType.FollowUp,
+                content: newEventContent,
+                date: new Date().toISOString(),
+            };
+
+            // Finally, add the new active follow-up event to the timeline.
+            const finalTimeline = [newFollowUpEvent, ...timelineWithSupersededFollowUps];
+
+            return { ...prev, timeline: finalTimeline };
+        });
     };
 
     const handleLogCall = (result: 'CE' | 'CNE', observationText: string) => {
