@@ -9,6 +9,7 @@ import { EditClientModal } from './EditClientModal';
 import { LogCallModal } from './LogCallModal';
 import { EditTimelineEventModal } from './EditTimelineEventModal';
 import { generateCadenceFollowUps } from '../utils/cadence';
+import { AnimatedCheckButton } from './AnimatedCheckButton';
 
 interface ClientDetailProps {
     client: Client;
@@ -342,7 +343,7 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
 
     const handleMarkCadenceFollowUpDone = (followUpId: string) => {
         const followUp = editedClient.automatedFollowUps?.find(f => f.id === followUpId);
-        if (!followUp) return;
+        if (!followUp || followUp.status !== AutomatedFollowUpStatus.Pending) return;
 
         const updatedFollowUps = editedClient.automatedFollowUps?.map(f =>
             f.id === followUpId ? { ...f, status: AutomatedFollowUpStatus.Done } : f
@@ -356,9 +357,9 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
         });
     };
     
-    const pendingFollowUps = useMemo(() =>
+    const allFollowUpsInCadence = useMemo(() =>
         (editedClient.automatedFollowUps || [])
-            .filter(f => f.status === AutomatedFollowUpStatus.Pending)
+            .filter(f => f.status !== AutomatedFollowUpStatus.Cancelled)
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
         [editedClient.automatedFollowUps]
     );
@@ -496,19 +497,24 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
                          {editedClient.status === Status.FluxoDeCadencia && (
                              <Card>
                                 <h2 className="text-lg font-semibold text-system-label-primary mb-4">Fluxo de Cadência</h2>
-                                {pendingFollowUps.length > 0 ? (
+                                {allFollowUpsInCadence.length > 0 ? (
                                     <ul className="space-y-3">
-                                        {pendingFollowUps.map(f => {
-                                            const isOverdue = new Date(f.date) < new Date();
+                                        {allFollowUpsInCadence.map(f => {
+                                            const isOverdue = f.status === AutomatedFollowUpStatus.Pending && new Date(f.date) < new Date();
+                                            const isDone = f.status === AutomatedFollowUpStatus.Done;
+
                                             return (
                                                 <li key={f.id} className="flex items-center justify-between p-2 rounded-lg bg-system-bg-secondary">
                                                     <div>
-                                                        <p className={`text-sm font-medium ${isOverdue ? 'text-apple-red' : 'text-system-label-primary'}`}>
+                                                        <p className={`text-sm font-medium ${isOverdue ? 'text-apple-red' : 'text-system-label-primary'} ${isDone ? 'line-through text-system-label-tertiary' : ''}`}>
                                                             {new Date(f.date).toLocaleString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                                         </p>
                                                         {isOverdue && <p className="text-xs text-apple-red">Atrasado</p>}
                                                     </div>
-                                                    <Button variant="ghost" size="sm" onClick={() => handleMarkCadenceFollowUpDone(f.id)}>Feito</Button>
+                                                    <AnimatedCheckButton 
+                                                        initialState={isDone ? 'success' : 'idle'}
+                                                        onClick={() => handleMarkCadenceFollowUpDone(f.id)} 
+                                                    />
                                                 </li>
                                             );
                                         })}
