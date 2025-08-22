@@ -15,6 +15,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, addClie
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [origin, setOrigin] = useState('');
+    const [saleValue, setSaleValue] = useState('');
     const [customFields, setCustomFields] = useState<{name: string, value: string}[]>([]);
 
     const handleCustomFieldChange = (index: number, field: 'name' | 'value', value: string) => {
@@ -42,7 +43,16 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, addClie
             return;
         }
         const finalCustomFields = customFields.filter(f => f.name.trim() !== '' && f.value.trim() !== '');
-        addClient({ name, email, phone, origin, customFields: finalCustomFields });
+        const saleValueNum = saleValue ? parseFloat(saleValue.replace(',', '.')) : undefined;
+        
+        addClient({ 
+            name, 
+            email, 
+            phone, 
+            origin, 
+            customFields: finalCustomFields, 
+            saleValue: saleValueNum && !isNaN(saleValueNum) ? saleValueNum : undefined 
+        });
         onClose();
     };
     
@@ -71,6 +81,10 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, addClie
                     <div>
                         <label htmlFor="origin" className="text-sm font-medium text-system-label-secondary">Origem</label>
                         <input id="origin" type="text" value={origin} onChange={e => setOrigin(e.target.value)} required className={inputClasses} />
+                    </div>
+                     <div>
+                        <label htmlFor="saleValue" className="text-sm font-medium text-system-label-secondary">Valor de Venda (Opcional)</label>
+                        <input id="saleValue" type="text" value={saleValue} onChange={e => setSaleValue(e.target.value)} className={inputClasses} placeholder="Ex: 550000,50" />
                     </div>
                     
                     <div className="space-y-3 pt-2">

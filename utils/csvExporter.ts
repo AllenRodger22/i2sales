@@ -2,14 +2,15 @@
 import type { Client } from '../types';
 
 export const exportToCsv = (clients: Client[], userName: string) => {
-    const headers = ['ID Cliente', 'Nome', 'Telefone', 'E-mail', 'Origem', 'Status', 'Data Cadastro', 'Data Follow-up', 'Anexos (JSON)'];
+    const headers = ['ID Cliente', 'Nome', 'Telefone', 'E-mail', 'Origem', 'Status', 'Data Cadastro', 'Data Follow-up', 'Valor de Venda', 'Anexos (JSON)'];
     
     let csvContent = headers.join(',') + '\n';
 
     clients.forEach(client => {
         const anexos = {
             customFields: client.customFields || [],
-            timeline: client.timeline || []
+            timeline: client.timeline || [],
+            automatedFollowUps: client.automatedFollowUps || []
         };
         const anexosJsonString = JSON.stringify(anexos);
         // To be safe in CSV, we wrap fields with commas or quotes in double quotes, and escape internal double quotes by doubling them.
@@ -24,6 +25,7 @@ export const exportToCsv = (clients: Client[], userName: string) => {
             client.status,
             `"${new Date(client.createdAt).toLocaleString('pt-BR')}"`,
             client.followUpDate ? `"${new Date(client.followUpDate).toLocaleString('pt-BR')}"` : '',
+            client.saleValue || '',
             safeAnexos,
         ];
         csvContent += row.join(',') + '\n';

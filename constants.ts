@@ -28,3 +28,5 @@ export const STATUS_OPTIONS: { value: Status; label: string; className: string; 
 export const getStatusInfo = (status: Status) => {
     return STATUS_OPTIONS.find(option => option.value === status) || { label: 'Desconhecido', className: 'bg-system-fill-primary text-system-label-secondary', dotClassName: 'bg-system-label-tertiary' };
 };
+
+export const CNE_OPTIONS = ['N chamou', 'N Atendeu', 'Caixa Postal', 'Numero Invalido', 'Fora de Area', 'Ocupado', 'Bloqueado'];

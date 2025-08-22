@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from './Button';
 import { Icon } from './Icon';
+import { CNE_OPTIONS } from '../constants';
 
 interface LogCallModalProps {
     onClose: () => void;
@@ -11,11 +12,16 @@ const inputClasses = "mt-1 block w-full bg-system-bg-tertiary dark:bg-system-bg-
 
 export const LogCallModal: React.FC<LogCallModalProps> = ({ onClose, onLogCall }) => {
     const [result, setResult] = useState<'CE' | 'CNE'>('CE');
+    const [cneReason, setCneReason] = useState(CNE_OPTIONS[1]); // Default to 'N Atendeu'
     const [observation, setObservation] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onLogCall(result, observation.trim());
+        const finalObservation = result === 'CNE'
+            ? `${cneReason}${observation.trim() ? ` - ${observation.trim()}` : ''}`
+            : observation.trim();
+        
+        onLogCall(result, finalObservation);
         onClose();
     };
 
@@ -42,6 +48,16 @@ export const LogCallModal: React.FC<LogCallModalProps> = ({ onClose, onLogCall }
                             </label>
                         </div>
                     </div>
+                    {result === 'CNE' && (
+                        <div>
+                            <label htmlFor="cne-reason" className="text-sm font-medium text-system-label-secondary">Motivo CNE</label>
+                            <select id="cne-reason" value={cneReason} onChange={e => setCneReason(e.target.value)} className={inputClasses}>
+                                {CNE_OPTIONS.map(option => (
+                                    <option key={option} value={option}>{option}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     <div>
                         <label htmlFor="observation" className="text-sm font-medium text-system-label-secondary">Observação (Opcional)</label>
                         <textarea id="observation" value={observation} onChange={e => setObservation(e.target.value)} rows={3} placeholder="Adicione um comentário..." className={inputClasses}></textarea>

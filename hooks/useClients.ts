@@ -30,8 +30,8 @@ const parsePtBrDate = (dateString?: string): string | undefined => {
 };
 
 
-const parseAnexos = (anexosString?: string): { customFields: any[]; timeline: any[] } => {
-    const defaults = { customFields: [], timeline: [] };
+const parseAnexos = (anexosString?: string): { customFields: any[]; timeline: any[]; automatedFollowUps: any[] } => {
+    const defaults = { customFields: [], timeline: [], automatedFollowUps: [] };
     if (!anexosString || anexosString.trim() === '{}' || anexosString.trim() === '') {
         return defaults;
     }
@@ -45,6 +45,7 @@ const parseAnexos = (anexosString?: string): { customFields: any[]; timeline: an
         return {
             customFields: parsed.customFields || [],
             timeline: parsed.timeline || [],
+            automatedFollowUps: parsed.automatedFollowUps || [],
         };
     } catch (e) {
         console.error('Failed to parse anexos JSON:', anexosString, e);
@@ -122,9 +123,9 @@ export const useClients = () => {
                 try {
                     const anexos = parseAnexos(row[mapping.anexos]);
 
-                    // Note: data_cadastro (createdAt) is handled by the backend. We don't send it.
-                    // We only parse it to potentially use it if needed, but the API doesn't accept it.
-                    
+                    const saleValueRaw = row[mapping.saleValue];
+                    const saleValue = saleValueRaw ? parseFloat(saleValueRaw.replace(/[^0-9,-]/g, '').replace(',', '.')) : undefined;
+
                     const clientDataForApi = {
                         name,
                         phone: row[mapping.phone] || '',
@@ -132,8 +133,10 @@ export const useClients = () => {
                         origin: sanitizeText(row[mapping.origin] || 'Importado'),
                         status: (row[mapping.status] as Status) || Status.PrimeiroAtendimento,
                         followUpDate: parsePtBrDate(row[mapping.followUpDate]),
+                        saleValue: saleValue && !isNaN(saleValue) ? saleValue : undefined,
                         timeline: anexos.timeline,
                         customFields: anexos.customFields,
+                        automatedFollowUps: anexos.automatedFollowUps,
                         isPending: false,
                     };
 

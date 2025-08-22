@@ -38,8 +38,10 @@ export const mapApiToClient = (apiClient: any): Client => ({
     createdAt: apiClient.data_cadastro,
     isPending: apiClient.isPending || false,
     followUpDate: apiClient.data_followup,
+    saleValue: apiClient.valor_venda,
     timeline: (apiClient.anexos?.timeline || []).map(mapApiTimelineEventToFrontend),
     customFields: apiClient.anexos?.customFields || [],
+    automatedFollowUps: apiClient.anexos?.automatedFollowUps || [],
 });
 
 // Maps the frontend Client type to the structure expected by the API
@@ -52,11 +54,13 @@ export const mapClientToApi = (client: Partial<Client>): any => {
     if (client.status !== undefined) apiClient.status = client.status;
     if (client.isPending !== undefined) apiClient.isPending = client.isPending;
     if (client.followUpDate !== undefined) apiClient.data_followup = client.followUpDate;
+    if (client.saleValue !== undefined) apiClient.valor_venda = client.saleValue;
 
     // The 'anexos' field is always sent, even if empty
     apiClient.anexos = {
         customFields: client.customFields || [],
         timeline: (client.timeline || []).map(mapFrontendTimelineEventToApi),
+        automatedFollowUps: client.automatedFollowUps || [],
     };
 
     return apiClient;
@@ -125,9 +129,11 @@ export const apiCreateClient = (clientData: any) => {
         status: clientData.status,
         isPending: clientData.isPending,
         data_followup: clientData.followUpDate,
+        valor_venda: clientData.saleValue,
         anexos: {
             customFields: clientData.customFields || [],
-            timeline: (clientData.timeline || []).map(mapFrontendTimelineEventToApi)
+            timeline: (clientData.timeline || []).map(mapFrontendTimelineEventToApi),
+            automatedFollowUps: clientData.automatedFollowUps || [],
         }
     };
     return apiRequest('/api/clientes', 'POST', apiPayload);

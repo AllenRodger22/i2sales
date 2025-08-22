@@ -3,6 +3,7 @@ import type { TimelineEvent } from '../types';
 import { TimelineEventType } from '../types';
 import { Button } from './Button';
 import { Icon } from './Icon';
+import { CNE_OPTIONS } from '../constants';
 
 interface EditTimelineEventModalProps {
     event: TimelineEvent;
@@ -12,14 +13,33 @@ interface EditTimelineEventModalProps {
 
 const inputClasses = "mt-1 block w-full bg-system-bg-tertiary dark:bg-system-bg-secondary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
 
-const parseCallContent = (content: string): { result: 'CE' | 'CNE', observation: string } => {
+const parseCallContent = (content: string): { result: 'CE' | 'CNE'; reason: string; observation: string } => {
+    const defaultReason = CNE_OPTIONS[1]; // N Atendeu
+
     if (content.startsWith('Ligação realizada: CE')) {
-        return { result: 'CE', observation: content.substring('Ligação realizada: CE'.length).replace(/^-/, '').trim() };
+        return { 
+            result: 'CE', 
+            reason: defaultReason, 
+            observation: content.substring('Ligação realizada: CE'.length).replace(/^-/, '').trim() 
+        };
     }
+    
     if (content.startsWith('Ligação realizada: CNE')) {
-        return { result: 'CNE', observation: content.substring('Ligação realizada: CNE'.length).replace(/^-/, '').trim() };
+        let rest = content.substring('Ligação realizada: CNE'.length).replace(/^-/, '').trim();
+        
+        const matchedOption = CNE_OPTIONS.find(option => rest.startsWith(option));
+
+        if (matchedOption) {
+            const observation = rest.substring(matchedOption.length).replace(/^-/, '').trim();
+            return { result: 'CNE', reason: matchedOption, observation };
+        }
+        
+        // Fallback for old CNE events without a specific reason
+        return { result: 'CNE', reason: defaultReason, observation: rest };
     }
-    return { result: 'CE', observation: content };
+
+    // Fallback for very old/unrecognized content
+    return { result: 'CE', reason: defaultReason, observation: content };
 };
 
 export const EditTimelineEventModal: React.FC<EditTimelineEventModalProps> = ({ event, onClose, onSave }) => {
@@ -27,14 +47,16 @@ export const EditTimelineEventModal: React.FC<EditTimelineEventModalProps> = ({ 
     const isNoteEvent = [TimelineEventType.Observacao, TimelineEventType.CNE, TimelineEventType.Anotacao].includes(event.type);
 
     const [callResult, setCallResult] = useState<'CE' | 'CNE'>('CE');
+    const [cneReason, setCneReason] = useState(CNE_OPTIONS[1]);
     const [callObservation, setCallObservation] = useState('');
     const [noteType, setNoteType] = useState<TimelineEventType>(event.type);
     const [noteContent, setNoteContent] = useState('');
     
     useEffect(() => {
         if (isCallEvent) {
-            const { result, observation } = parseCallContent(event.content);
+            const { result, reason, observation } = parseCallContent(event.content);
             setCallResult(result);
+            setCneReason(reason);
             setCallObservation(observation);
         }
         if (isNoteEvent) {
@@ -48,10 +70,11 @@ export const EditTimelineEventModal: React.FC<EditTimelineEventModalProps> = ({ 
         let updatedData: Partial<Omit<TimelineEvent, 'id' | 'date'>> = {};
 
         if (isCallEvent) {
-            let newContent = `Ligação realizada: ${callResult}`;
-            if (callObservation) {
-                newContent += ` - ${callObservation}`;
+            let finalDetails = callObservation.trim();
+            if (callResult === 'CNE') {
+                finalDetails = `${cneReason}${finalDetails ? ` - ${finalDetails}` : ''}`;
             }
+            const newContent = `Ligação realizada: ${callResult}${finalDetails ? ` - ${finalDetails}` : ''}`;
             updatedData = { content: newContent };
         } else if (isNoteEvent) {
             if (!noteContent.trim()) {
@@ -82,6 +105,16 @@ export const EditTimelineEventModal: React.FC<EditTimelineEventModalProps> = ({ 
                             </label>
                         </div>
                     </div>
+                    {callResult === 'CNE' && (
+                        <div>
+                            <label htmlFor="cne-reason-edit" className="text-sm font-medium text-system-label-secondary">Motivo CNE</label>
+                            <select id="cne-reason-edit" value={cneReason} onChange={e => setCneReason(e.target.value)} className={inputClasses}>
+                                {CNE_OPTIONS.map(option => (
+                                    <option key={option} value={option}>{option}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     <div>
                         <label htmlFor="observation" className="text-sm font-medium text-system-label-secondary">Observação</label>
                         <textarea id="observation" value={callObservation} onChange={e => setCallObservation(e.target.value)} rows={3} className={inputClasses}></textarea>

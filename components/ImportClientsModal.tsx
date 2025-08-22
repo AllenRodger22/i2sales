@@ -21,6 +21,7 @@ const OPTIONAL_FIELDS: Record<string, string> = {
     status: 'Status',
     createdAt: 'Data Cadastro',
     followUpDate: 'Data Follow-up',
+    saleValue: 'Valor de Venda',
     anexos: 'Anexos (JSON)'
 };
 

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import type { Client } from '../types';
-import { Status, TimelineEventType } from '../types';
+import type { Client, AutomatedFollowUp } from '../types';
+import { Status, TimelineEventType, AutomatedFollowUpStatus } from '../types';
 import { exportToCsv } from '../utils/csvExporter';
 import { ClientList } from './ClientList';
 import { Card } from './Card';
@@ -34,6 +34,21 @@ const KpiCard: React.FC<{ title: string; value: number; colorClass: string; isSe
     </div>
 );
 
+const getNextFollowUp = (client: Client): string | undefined => {
+    const manualFollowUpTime = client.followUpDate ? new Date(client.followUpDate).getTime() : Infinity;
+    
+    const nextAutomated = (client.automatedFollowUps || [])
+        .filter(f => f.status === AutomatedFollowUpStatus.Pending)
+        .map(f => new Date(f.date).getTime())
+        .sort((a, b) => a - b)[0];
+
+    const nextAutomatedTime = nextAutomated || Infinity;
+    
+    const soonestTime = Math.min(manualFollowUpTime, nextAutomatedTime);
+
+    return soonestTime !== Infinity ? new Date(soonestTime).toISOString() : undefined;
+};
+
 
 export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClientSelect, onAddClient, onShowProductivityReport, importClients, onLogout, deleteAllClients }) => {
     const { user } = useAuth();
@@ -41,6 +56,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
     const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all');
     const [kpiFilter, setKpiFilter] = useState<KpiFilterType>(null);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
+    const clientsWithNextFollowUp = useMemo(() => {
+        return clients.map(c => ({ ...c, nextFollowUp: getNextFollowUp(c) }));
+    }, [clients]);
 
     const now = new Date();
     const startOfToday = new Date(now);
@@ -51,14 +70,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
     const totalLeads = clients.length;
     const primeiroAtendimentoCount = clients.filter(c => c.status === Status.PrimeiroAtendimento).length;
     
-    const followUpsToday = clients.filter(c => {
-        if (c.status === Status.Arquivado || !c.followUpDate) return false;
-        const d = new Date(c.followUpDate);
+    const followUpsToday = clientsWithNextFollowUp.filter(c => {
+        if (c.status === Status.Arquivado || !c.nextFollowUp) return false;
+        const d = new Date(c.nextFollowUp);
         return d >= startOfToday && d <= endOfToday;
     }).length;
 
-    const overdueFollowUps = clients.filter(c => c.status !== Status.Arquivado && c.followUpDate && new Date(c.followUpDate) < now).length;
-    const futureFollowUps = clients.filter(c => c.status !== Status.Arquivado && c.followUpDate && new Date(c.followUpDate) > endOfToday).length;
+    const overdueFollowUps = clientsWithNextFollowUp.filter(c => c.status !== Status.Arquivado && c.nextFollowUp && new Date(c.nextFollowUp) < startOfToday).length;
+    const futureFollowUps = clientsWithNextFollowUp.filter(c => c.status !== Status.Arquivado && c.nextFollowUp && new Date(c.nextFollowUp) > endOfToday).length;
 
 
     const handleKpiFilterClick = (filter: KpiFilterType) => {
@@ -66,7 +85,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
     };
 
     const filteredClients = useMemo(() => {
-        let tempClients = clients;
+        let tempClients = clientsWithNextFollowUp;
         
         const now = new Date();
         const startOfToday = new Date(now);
@@ -76,17 +95,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
 
         switch (kpiFilter) {
             case 'overdue':
-                tempClients = tempClients.filter(c => c.status !== Status.Arquivado && c.followUpDate && new Date(c.followUpDate) < now);
+                tempClients = tempClients.filter(c => c.status !== Status.Arquivado && c.nextFollowUp && new Date(c.nextFollowUp) < startOfToday);
                 break;
             case 'today':
                 tempClients = tempClients.filter(c => {
-                    if (c.status === Status.Arquivado || !c.followUpDate) return false;
-                    const d = new Date(c.followUpDate);
+                    if (c.status === Status.Arquivado || !c.nextFollowUp) return false;
+                    const d = new Date(c.nextFollowUp);
                     return d >= startOfToday && d <= endOfToday;
                 });
                 break;
             case 'future':
-                tempClients = tempClients.filter(c => c.status !== Status.Arquivado && c.followUpDate && new Date(c.followUpDate) > endOfToday);
+                tempClients = tempClients.filter(c => c.status !== Status.Arquivado && c.nextFollowUp && new Date(c.nextFollowUp) > endOfToday);
                 break;
             case 'primeiro-atendimento':
                 tempClients = tempClients.filter(c => c.status === Status.PrimeiroAtendimento);
@@ -133,7 +152,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
 
             return false;
         });
-    }, [clients, filter, statusFilter, kpiFilter]);
+    }, [clientsWithNextFollowUp, filter, statusFilter, kpiFilter]);
 
     const handleExport = () => {
         exportToCsv(clients, userName);

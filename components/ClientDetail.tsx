@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import type { Client, TimelineEvent } from '../types';
-import { Status, TimelineEventType } from '../types';
+import type { Client, TimelineEvent, AutomatedFollowUp } from '../types';
+import { Status, TimelineEventType, AutomatedFollowUpStatus } from '../types';
 import { STATUS_OPTIONS, getStatusInfo } from '../constants';
 import { Button } from './Button';
 import { Icon } from './Icon';
@@ -8,6 +8,7 @@ import { Card } from './Card';
 import { EditClientModal } from './EditClientModal';
 import { LogCallModal } from './LogCallModal';
 import { EditTimelineEventModal } from './EditTimelineEventModal';
+import { generateCadenceFollowUps } from '../utils/cadence';
 
 interface ClientDetailProps {
     client: Client;
@@ -19,6 +20,14 @@ interface ClientDetailProps {
 const inputClasses = "block w-full bg-system-bg-tertiary dark:bg-system-bg-secondary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
 const editableTypes: TimelineEventType[] = [TimelineEventType.Ligacao, TimelineEventType.Observacao, TimelineEventType.CNE, TimelineEventType.Anotacao];
 const secondaryButtonLinkClasses = "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-apple-blue focus:ring-offset-2 dark:focus:ring-offset-system-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed bg-system-fill-primary text-system-label-primary hover:bg-system-fill-secondary active:brightness-95 dark:active:brightness-105";
+
+const formatCurrency = (value?: number) => {
+    if (value === undefined || value === null) return '';
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    }).format(value);
+};
 
 const TimelineItem: React.FC<{ event: TimelineEvent; onEdit: (event: TimelineEvent) => void; isLast: boolean; }> = ({ event, onEdit, isLast }) => {
     const getIcon = (type: TimelineEventType) => {
@@ -83,7 +92,39 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     useEffect(() => {
-        setEditedClient(JSON.parse(JSON.stringify(client)));
+        let isMounted = true;
+        const initialClientState = JSON.parse(JSON.stringify(client));
+        const now = new Date();
+        let needsUpdate = false;
+        let newTimelineEvents: TimelineEvent[] = [];
+
+        const updatedFollowUps = (initialClientState.automatedFollowUps || []).map((f: AutomatedFollowUp) => {
+            if (f.status === AutomatedFollowUpStatus.Pending && new Date(f.date) < now) {
+                needsUpdate = true;
+                const formattedDate = new Date(f.date).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                newTimelineEvents.push({
+                    id: `missed-cadence-${f.id}`,
+                    type: TimelineEventType.Anotacao,
+                    content: `Follow-up de cadência perdido em ${formattedDate}.`,
+                    date: new Date().toISOString(),
+                });
+                return { ...f, status: AutomatedFollowUpStatus.Missed };
+            }
+            return f;
+        });
+
+        if (needsUpdate && isMounted) {
+            setEditedClient(prev => ({
+                ...prev,
+                ...initialClientState,
+                automatedFollowUps: updatedFollowUps,
+                timeline: [...newTimelineEvents, ...(prev.timeline || [])]
+            }));
+        } else {
+             setEditedClient(initialClientState);
+        }
+        
+        return () => { isMounted = false; }
     }, [client]);
 
     const statusInfo = getStatusInfo(editedClient.status);
@@ -135,23 +176,59 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
         if (editedClient.status === newStatus) return;
         if (newStatus === Status.PrimeiroAtendimento && editedClient.timeline.length > 1) return;
 
-        const oldStatusLabel = getStatusInfo(editedClient.status).label;
+        const oldStatus = editedClient.status;
+        const oldStatusLabel = getStatusInfo(oldStatus).label;
         const newStatusLabel = STATUS_OPTIONS.find(s => s.value === newStatus)?.label || newStatus;
         
-        setEditedClient(prev => {
-            const newEvent: TimelineEvent = {
-                id: `${new Date().toISOString()}-tl-event-${Math.random()}`,
-                type: TimelineEventType.StatusChange,
-                content: `Status alterado de '${oldStatusLabel}' para '${newStatusLabel}'`,
+        let newAutomatedFollowUps = editedClient.automatedFollowUps || [];
+        let newFollowUpDate = editedClient.followUpDate;
+
+        const statusChangeEvent: TimelineEvent = {
+            id: `${new Date().toISOString()}-status-change`,
+            type: TimelineEventType.StatusChange,
+            content: `Status alterado de '${oldStatusLabel}' para '${newStatusLabel}'`,
+            date: new Date().toISOString(),
+            meta: { from: oldStatus, to: newStatus }
+        };
+        
+        const extraTimelineEvents: TimelineEvent[] = [statusChangeEvent];
+        
+        if (newStatus === Status.FluxoDeCadencia) {
+            newAutomatedFollowUps = generateCadenceFollowUps(new Date());
+            extraTimelineEvents.push({
+                id: `${new Date().toISOString()}-cadence-start`,
+                type: TimelineEventType.Anotacao,
+                content: 'Fluxo de Cadência iniciado.',
                 date: new Date().toISOString(),
-                meta: { from: prev.status, to: newStatus }
-            };
-            return {
-                ...prev,
-                status: newStatus,
-                timeline: [newEvent, ...(prev.timeline || [])]
-            };
-        });
+            });
+            if(newFollowUpDate) {
+                 extraTimelineEvents.push({
+                    id: `${new Date().toISOString()}-manual-followup-clear`,
+                    type: TimelineEventType.Anotacao,
+                    content: 'Follow-up manual removido para iniciar a cadência.',
+                    date: new Date().toISOString(),
+                });
+                newFollowUpDate = undefined;
+            }
+        } else if (oldStatus === Status.FluxoDeCadencia) {
+            newAutomatedFollowUps = newAutomatedFollowUps.map(f => 
+                f.status === AutomatedFollowUpStatus.Pending ? { ...f, status: AutomatedFollowUpStatus.Cancelled } : f
+            );
+             extraTimelineEvents.push({
+                id: `${new Date().toISOString()}-cadence-end`,
+                type: TimelineEventType.Anotacao,
+                content: 'Fluxo de Cadência finalizado.',
+                date: new Date().toISOString(),
+            });
+        }
+        
+        setEditedClient(prev => ({
+            ...prev,
+            status: newStatus,
+            followUpDate: newFollowUpDate,
+            automatedFollowUps: newAutomatedFollowUps,
+            timeline: [...extraTimelineEvents, ...(prev.timeline || [])]
+        }));
     };
     
     const handleFollowUpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -263,6 +340,29 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
         }
     };
 
+    const handleMarkCadenceFollowUpDone = (followUpId: string) => {
+        const followUp = editedClient.automatedFollowUps?.find(f => f.id === followUpId);
+        if (!followUp) return;
+
+        const updatedFollowUps = editedClient.automatedFollowUps?.map(f =>
+            f.id === followUpId ? { ...f, status: AutomatedFollowUpStatus.Done } : f
+        );
+        setEditedClient(prev => ({ ...prev, automatedFollowUps: updatedFollowUps }));
+        
+        const formattedDate = new Date(followUp.date).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        addLocalTimelineEvent({
+            type: TimelineEventType.Observacao,
+            content: `Follow-up de cadência (Fluxo de Cadência) concluído em ${formattedDate}.`,
+        });
+    };
+    
+    const pendingFollowUps = useMemo(() =>
+        (editedClient.automatedFollowUps || [])
+            .filter(f => f.status === AutomatedFollowUpStatus.Pending)
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+        [editedClient.automatedFollowUps]
+    );
+
     return (
         <>
             {isSaving && (
@@ -291,6 +391,12 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
                                  <p>{editedClient.email}</p>
                                  <p>{editedClient.phone}</p>
                                  <p>Origem: {editedClient.origin}</p>
+                                 {editedClient.saleValue && (
+                                     <p className="font-semibold text-system-label-primary flex items-center gap-2">
+                                        <Icon name="dollar-sign" className="w-4 h-4 text-apple-green" />
+                                        {formatCurrency(editedClient.saleValue)}
+                                    </p>
+                                 )}
                             </div>
                         </div>
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusInfo.className} flex-shrink-0`}>{statusInfo.label}</span>
@@ -357,14 +463,16 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
                                         className={`w-full ${editedClient.isPending ? 'text-apple-orange ring-1 ring-apple-orange' : ''}`}
                                     ><Icon name="alert-triangle" className="w-4 h-4 mr-2" />{editedClient.isPending ? 'Resolver Pendência' : 'Marcar Pendência'}</Button>
                                 </div>
-                                 <div>
-                                    <label htmlFor="follow-up-date" className="text-sm font-medium text-system-label-secondary">Agendar Follow-up</label>
-                                    <input id="follow-up-date" type="datetime-local" value={followUpDateForInput} onChange={handleFollowUpChange} className={`mt-1 ${inputClasses}`} />
-                                    <Button onClick={handleFollowUpSave} variant="secondary" className="mt-2 w-full">
-                                        <Icon name="calendar" className="w-4 h-4 mr-2"/>
-                                        Agendar Follow-up
-                                    </Button>
-                                </div>
+                                 {editedClient.status !== Status.FluxoDeCadencia && (
+                                     <div>
+                                        <label htmlFor="follow-up-date" className="text-sm font-medium text-system-label-secondary">Agendar Follow-up</label>
+                                        <input id="follow-up-date" type="datetime-local" value={followUpDateForInput} onChange={handleFollowUpChange} className={`mt-1 ${inputClasses}`} />
+                                        <Button onClick={handleFollowUpSave} variant="secondary" className="mt-2 w-full">
+                                            <Icon name="calendar" className="w-4 h-4 mr-2"/>
+                                            Agendar Follow-up
+                                        </Button>
+                                    </div>
+                                 )}
                             </div>
                              <div className="border-t border-system-separator mt-6 pt-4">
                                 {editedClient.status === Status.Arquivado ? (
@@ -385,6 +493,33 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
                                 )}
                             </div>
                         </Card>
+                         {editedClient.status === Status.FluxoDeCadencia && (
+                             <Card>
+                                <h2 className="text-lg font-semibold text-system-label-primary mb-4">Fluxo de Cadência</h2>
+                                {pendingFollowUps.length > 0 ? (
+                                    <ul className="space-y-3">
+                                        {pendingFollowUps.map(f => {
+                                            const isOverdue = new Date(f.date) < new Date();
+                                            return (
+                                                <li key={f.id} className="flex items-center justify-between p-2 rounded-lg bg-system-bg-secondary">
+                                                    <div>
+                                                        <p className={`text-sm font-medium ${isOverdue ? 'text-apple-red' : 'text-system-label-primary'}`}>
+                                                            {new Date(f.date).toLocaleString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                        </p>
+                                                        {isOverdue && <p className="text-xs text-apple-red">Atrasado</p>}
+                                                    </div>
+                                                    <Button variant="ghost" size="sm" onClick={() => handleMarkCadenceFollowUpDone(f.id)}>Feito</Button>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                ) : (
+                                    <p className="text-sm text-center text-system-label-secondary py-4">
+                                        Não há mais follow-ups pendentes neste fluxo de cadência.
+                                    </p>
+                                )}
+                             </Card>
+                         )}
                         <Card>
                             <h2 className="text-lg font-semibold text-system-label-primary mb-4">Informações Adicionais</h2>
                             {editedClient.customFields && editedClient.customFields.length > 0 ? (

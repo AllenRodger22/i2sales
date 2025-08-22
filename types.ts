@@ -29,6 +29,19 @@ export interface TimelineEvent {
     meta?: Record<string, any>;
 }
 
+export enum AutomatedFollowUpStatus {
+    Pending = 'Pendente',
+    Done = 'Feito',
+    Missed = 'Não Feito',
+    Cancelled = 'Cancelado',
+}
+
+export interface AutomatedFollowUp {
+    id: string;
+    date: string;
+    status: AutomatedFollowUpStatus;
+}
+
 export interface Client {
     _id?: string; // Database ID from MongoDB
     id: string;
@@ -40,8 +53,10 @@ export interface Client {
     createdAt: string;
     isPending?: boolean;
     followUpDate?: string;
+    saleValue?: number;
     timeline: TimelineEvent[];
     customFields?: { name: string; value: string }[];
+    automatedFollowUps?: AutomatedFollowUp[];
 }
 
 
