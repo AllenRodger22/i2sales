@@ -1,7 +1,7 @@
 import type { Client, TimelineEvent } from '../types';
 import { TimelineEventType, Status } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://i2sales-backend.onrender.com';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 const getToken = () => localStorage.getItem('authToken');
 
@@ -72,11 +72,6 @@ export const mapClientToApi = (client: Partial<Client>): any => {
 
 const apiRequest = async (endpoint: string, method: string, body?: any) => {
     const headers: HeadersInit = { 'Content-Type': 'application/json' };
-    const token = getToken();
-    
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
 
     const config: RequestInit = {
         method,
