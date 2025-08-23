@@ -60,7 +60,6 @@ export const DashboardGestor: React.FC = () => {
   const [comparisonFunnelData, setComparisonFunnelData] = useState<FunnelData | null>(null);
   const [conversionSeries, setConversionSeries] = useState<{ date: string; leads: number; vendas: number; conversion: number; }[]>([]);
   const [isMobile, setIsMobile] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
     const update = () => setIsMobile(mq.matches);
@@ -78,24 +77,18 @@ export const DashboardGestor: React.FC = () => {
       }
     };
   }, []);
-    if (mq.addEventListener) {
-      mq.addEventListener('change', update);
-    } else {
-      mq.addListener(update);
-    }
-    return () => {
-      if (mq.removeEventListener) {
-        mq.removeEventListener('change', update);
-      } else {
-        mq.removeListener(update);
-      }
-    };
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
+
 
   const fetchUsers = async () => {
     try {
       const corretores = await apiGetCorretores();
-      setUsers(corretores.map((user: any) => ({ id: user._id, name: user.name })));
+      setUsers(
+        (Array.isArray(corretores) ? corretores : []).map((user: any) => ({
+          id: user._id || user.id,
+          name: user.name || user.nome || user.username || user.email || 'Sem nome'
+        }))
+      );
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
     }
@@ -211,12 +204,6 @@ export const DashboardGestor: React.FC = () => {
   }, [selectedUsers, users]);
 
   const calculatePercentageChange = (current: number, previous: number) => {
-      {isMobile && (
-        <div className="mb-4 rounded-2xl border border-system-separator/40 bg-system-bg-secondary/60 text-system-label-primary px-4 py-3 text-center font-semibold tracking-wide">
-          ABRA NO PC OU LAPTOP!!
-        </div>
-      )}
-
     if (previous === 0) return current > 0 ? 100 : 0;
     return ((current - previous) / previous * 100);
   };
@@ -226,6 +213,12 @@ export const DashboardGestor: React.FC = () => {
       const user = users.find(u => u.id === selectedUsers[0]);
       return user ? user.name : '';
     }
+      {isMobile && (
+        <div className="mb-4 rounded-2xl border border-system-separator/40 bg-system-bg-secondary/60 text-system-label-primary px-4 py-3 text-center font-semibold tracking-wide">
+          ABRA NO PC OU LAPTOP!!
+        </div>
+      )}
+
     return '';
   };
 
@@ -245,6 +238,7 @@ export const DashboardGestor: React.FC = () => {
               aria-label="Data Inicial"
               className="w-full sm:w-auto bg-system-bg-primary/70 text-system-label-primary border border-system-separator/40 rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all"
             />
+
             <input
               type="date"
               value={endDate}
