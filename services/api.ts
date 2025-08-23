@@ -165,8 +165,19 @@ export const apiArchiveLead = (leadId: string) => {
 };
 
 export const apiGetCorretores = async (): Promise<any[]> => {
-    const data = await apiRequest('/api/users/corretores', 'GET');
-    return data || [];
+    try {
+        const data = await apiRequest('/api/users/corretores', 'GET');
+        if (Array.isArray(data) && data.length > 0) return data;
+        const alt = await apiRequest('/api/users/all', 'GET');
+        return Array.isArray(alt) ? alt : [];
+    } catch {
+        try {
+            const alt = await apiRequest('/api/users/all', 'GET');
+            return Array.isArray(alt) ? alt : [];
+        } catch {
+            return [];
+        }
+    }
 };
 
 export const apiGetKpis = (params: string) => {
