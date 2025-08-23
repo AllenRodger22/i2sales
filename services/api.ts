@@ -176,3 +176,7 @@ export const apiGetKpis = (params: string) => {
 export const apiGetFunnel = (params: string) => {
     return apiRequest(`/api/bi/funnel?${params}`, 'GET');
 };
+
+export const apiGetConversionSeries = (params: string) => {
+    return apiRequest(`/api/bi/conversion-series?${params}`, 'GET');
+};
