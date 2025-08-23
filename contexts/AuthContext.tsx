@@ -29,10 +29,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => {
         try {
             const storedToken = localStorage.getItem('authToken');
-            const storedUser = localStorage.getItem('authUser');
-            if (storedToken && storedUser) {
+            const storedUserStr = localStorage.getItem('authUser');
+            if (storedToken && storedUserStr) {
+                let storedUser = JSON.parse(storedUserStr);
+                let decodedRole: 'user' | 'manager' | 'admin' | undefined;
+                try {
+                    const [, payloadB64] = storedToken.split('.');
+                    const payload = JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
+                    decodedRole = payload.role;
+                } catch {}
+                if (decodedRole && decodedRole !== storedUser.role) {
+                    storedUser = { ...storedUser, role: decodedRole };
+                    localStorage.setItem('authUser', JSON.stringify(storedUser));
+                }
                 setToken(storedToken);
-                setUser(JSON.parse(storedUser));
+                setUser(storedUser);
             }
         } catch (e) {
             console.error("Failed to load auth data from storage", e);
@@ -45,7 +56,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     const handleAuthSuccess = (data: { token: string; userName: string; role?: 'user' | 'manager' | 'admin' }) => {
         setToken(data.token);
-        const newUser = { name: data.userName, role: data.role || 'user' };
+        let decodedRole: 'user' | 'manager' | 'admin' | undefined;
+        try {
+            const [, payloadB64] = data.token.split('.');
+            const payload = JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
+            decodedRole = payload.role;
+        } catch {}
+        const newUser = { name: data.userName, role: (decodedRole || data.role || 'user') };
         setUser(newUser);
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('authUser', JSON.stringify(newUser));

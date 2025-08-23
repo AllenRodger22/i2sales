@@ -16,7 +16,9 @@ export const ProtectedRoleRoute: React.FC<ProtectedRoleRouteProps> = ({
 
   const hasRequiredRole = Array.isArray(requiredRole) 
     ? requiredRole.includes(user?.role as any)
-    : user?.role === requiredRole || (requiredRole === 'manager' && user?.role === 'admin') || (requiredRole === 'admin' && user?.role === 'manager');
+    : (requiredRole === 'manager'
+        ? (user?.role === 'manager' || user?.role === 'admin')
+        : user?.role === 'admin');
 
   if (!user || !hasRequiredRole) {
     return <>{fallback}</>;
