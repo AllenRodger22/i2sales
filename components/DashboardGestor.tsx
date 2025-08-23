@@ -232,7 +232,7 @@ export const DashboardGestor: React.FC = () => {
               multiple
               value={selectedUsers}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                const options = Array.from(e.target.selectedOptions).map(o => o.value);
+                const options = Array.from(e.target.selectedOptions).map((o) => (o as HTMLOptionElement).value);
                 setSelectedUsers(options);
               }}
               className="w-full bg-system-bg-primary text-system-label-primary border border-system-separator/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue transition-all duration-200 min-h-[120px]"
@@ -352,6 +352,7 @@ export const DashboardGestor: React.FC = () => {
             <div className="text-sm">Documentação → Venda: <span className="font-semibold">{funnelData.conversoes.documentacaoParaVenda}%</span></div>
           </div>
         </Card>
+      )}
       {conversionSeries && conversionSeries.length > 0 && (
         <Card className="p-6 bg-system-bg-secondary/30 backdrop-blur-sm border border-system-separator/50 shadow-xl mt-6">
           <h3 className="text-2xl font-bold text-system-label-primary mb-4 text-center">📈 Taxa de Conversão ao longo do tempo</h3>
@@ -367,7 +368,6 @@ export const DashboardGestor: React.FC = () => {
             </ResponsiveContainer>
           </div>
         </Card>
-      )}
       )}
     </div>
   );
