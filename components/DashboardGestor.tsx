@@ -59,11 +59,38 @@ export const DashboardGestor: React.FC = () => {
   const [comparisonKpiData, setComparisonKpiData] = useState<KpiData | null>(null);
   const [comparisonFunnelData, setComparisonFunnelData] = useState<FunnelData | null>(null);
   const [conversionSeries, setConversionSeries] = useState<{ date: string; leads: number; vendas: number; conversion: number; }[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    if ((mq as any).addEventListener) {
+      (mq as any).addEventListener('change', update);
+    } else {
+      (mq as any).addListener(update);
+    }
+    return () => {
+      if ((mq as any).removeEventListener) {
+        (mq as any).removeEventListener('change', update);
+      } else {
+        (mq as any).removeListener(update);
+      }
+    };
+  }, []);
+  useEffect(() => { fetchUsers(); }, []);
+
 
   const fetchUsers = async () => {
     try {
       const corretores = await apiGetCorretores();
-      setUsers(corretores.map((user: any) => ({ id: user._id, name: user.name })));
+      setUsers(
+        (Array.isArray(corretores) ? corretores : []).map((user: any) => ({
+          id: user._id || user.id,
+          name: user.name || user.nome || user.username || user.email || 'Sem nome'
+        }))
+      );
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
     }
@@ -170,6 +197,19 @@ export const DashboardGestor: React.FC = () => {
     if (!funnelData) return 0;
     return totalLeads > 0 ? Math.round((funnelData.vendas / totalLeads) * 100) : 0;
   }, [funnelData, totalLeads]);
+  const getSelectedUserName = () => {
+    if (selectedUsers.length === 1) {
+      const user = users.find(u => u.id === selectedUsers[0]);
+      return user ? user.name : '';
+    }
+    return '';
+  };
+
+  const filteredUsers = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return users;
+    return users.filter(u => (u.name || '').toLowerCase().includes(term));
+  }, [users, searchTerm]);
 
   const titleText = useMemo(() => {
     if (selectedUsers.length === 1) {
@@ -183,148 +223,185 @@ export const DashboardGestor: React.FC = () => {
     return ((current - previous) / previous * 100);
   };
 
-  const getSelectedUserName = () => {
-    if (selectedUsers.length === 1) {
-      const user = users.find(u => u.id === selectedUsers[0]);
-      return user ? user.name : '';
-    }
-    return '';
-  };
-
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto space-y-6">
-      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-system-label-primary">{titleText}</h1>
-          <p className="text-system-label-secondary mt-2">Análise de performance e inteligência de negócios</p>
+      {isMobile && (
+        <div className="mb-4 rounded-2xl border border-system-separator/40 bg-system-bg-secondary/60 text-system-label-primary px-4 py-3 text-center font-semibold tracking-wide">
+          ABRA NO PC OU LAPTOP!!
         </div>
-      </header>
+      )}
 
-      <Card className="p-6 bg-system-bg-secondary/50 backdrop-blur-sm border border-system-separator/50 shadow-lg">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-          <div>
-            <label className="block text-sm font-semibold text-system-label-primary mb-2">
-              📅 Data Inicial
-            </label>
+      
+      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight text-system-label-primary">{titleText}</h1>
+          <p className="text-system-label-secondary mt-1">Análise de performance e inteligência de negócios</p>
+        </div>
+        <div className="w-full sm:w-auto sm:ml-auto">
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full bg-system-bg-primary text-system-label-primary border border-system-separator/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue transition-all duration-200"
+              aria-label="Data Inicial"
+              className="w-full sm:w-auto bg-system-bg-primary/70 text-system-label-primary border border-[#545458] rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/30 transition-all"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-system-label-primary mb-2">
-              📅 Data Final
-            </label>
+
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full bg-system-bg-primary text-system-label-primary border border-system-separator/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue transition-all duration-200"
+              aria-label="Data Final"
+              className="w-full sm:w-auto bg-system-bg-primary/70 text-system-label-primary border border-[#545458] rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/30 transition-all"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-system-label-primary mb-2">
-              👤 Filtrar por Corretor(es)
-            </label>
-            <select
-              multiple
-              value={selectedUsers}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                const options = Array.from(e.target.selectedOptions).map((o) => (o as HTMLOptionElement).value);
-                setSelectedUsers(options);
-              }}
-              className="w-full bg-system-bg-primary text-system-label-primary border border-system-separator/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:border-apple-blue transition-all duration-200 min-h-[120px]"
-            >
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              onClick={fetchData} 
-              disabled={isLoading}
-              className="bg-apple-blue hover:bg-apple-blue/90 text-white rounded-xl px-6 py-3 font-medium transition-all duration-200 hover:scale-105 shadow-lg shadow-apple-blue/25"
-            >
-              <Icon name="refresh-cw" className="w-4 h-4 mr-2" />
-              {isLoading ? 'Carregando...' : 'Atualizar'}
-            </Button>
-            <Button 
-              onClick={() => setShowComparison(!showComparison)} 
-              variant="secondary"
-              className="bg-system-fill-secondary hover:bg-system-fill-tertiary text-system-label-primary rounded-xl px-6 py-3 font-medium transition-all duration-200"
-            >
-              <Icon name="bar-chart-3" className="w-4 h-4 mr-2" />
-              {showComparison ? 'Ocultar Comparação' : 'Comparar Períodos'}
-            </Button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsPopoverOpen(!isPopoverOpen)}
+                className="min-w-[260px] bg-system-bg-primary/70 text-system-label-primary border border-system-separator/40 rounded-2xl px-3 py-2 text-sm flex flex-wrap gap-1 items-center justify-between focus:outline-none focus:ring-2 focus:ring-apple-blue/40"
+                aria-haspopup="listbox"
+                aria-expanded={isPopoverOpen}
+                aria-label="Filtrar por Corretor(es)"
+              >
+                <div className="flex flex-wrap gap-1">
+                  {selectedUsers.length === 0 && (
+                    <span className="text-system-label-secondary">Todos os corretores</span>
+                  )}
+                  {selectedUsers.map((id) => {
+                    const u = users.find(x => x.id === id);
+                    return (
+                      <span key={id} className="inline-flex items-center gap-1 rounded-full bg-system-fill-secondary/60 text-system-label-primary px-2 py-0.5 text-xs">
+                        <Icon name="person" aria-label="Corretor" /> {u?.name || 'Sem nome'}
+                        <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedUsers(selectedUsers.filter(x => x !== id)); }} aria-label={`Remover ${u?.name || ''}`}>
+                          <Icon name="close" />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+                <Icon name="expand_more" aria-label="Abrir filtro" />
+              </button>
+
+              {isPopoverOpen && (
+                <div className="absolute z-20 mt-2 w-[320px] rounded-2xl border border-system-separator/40 bg-system-bg-secondary/95 backdrop-blur-xl shadow-xl p-3 right-0">
+                  <div className="mb-2">
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Buscar corretores…"
+                      className="w-full bg-system-bg-primary/70 text-system-label-primary border border-system-separator/40 rounded-2xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/40"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      id="all-corretores"
+                      type="checkbox"
+                      checked={selectedUsers.length === 0}
+                      onChange={() => setSelectedUsers([])}
+                    />
+                    <label htmlFor="all-corretores" className="text-sm text-system-label-primary">Todos os corretores</label>
+                  </div>
+                  <div className="max-h-56 overflow-auto pr-1" role="listbox">
+                    {filteredUsers.map(u => {
+                      const checked = selectedUsers.includes(u.id);
+                      return (
+                        <label key={u.id} className="flex items-center gap-2 py-1 text-sm text-system-label-primary">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => {
+                              setSelectedUsers(checked ? selectedUsers.filter(x => x !== u.id) : [...selectedUsers, u.id]);
+                            }}
+                          />
+                          <span>{u.name}</span>
+                        </label>
+                      );
+                    })}
+                    {filteredUsers.length === 0 && (
+                      <div className="py-4 text-center text-system-label-secondary text-sm">Nenhum corretor encontrado</div>
+                    )}
+                  </div>
+                  <div className="mt-3 flex justify-end gap-2">
+                    <Button variant="secondary" className="bg-transparent border border-system-separator/30 text-system-label-primary hover:bg-system-fill-secondary/30 rounded-full px-4 py-1.5 text-sm" onClick={() => setIsPopoverOpen(false)}>Fechar</Button>
+                    <Button className="bg-apple-blue hover:bg-apple-blue/90 text-white rounded-full px-4 py-1.5 text-sm" onClick={() => setIsPopoverOpen(false)}>Aplicar</Button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={fetchData}
+                disabled={isLoading}
+                className="bg-apple-blue hover:bg-apple-blue/90 text-white rounded-full px-5 py-2 text-sm font-medium transition-all"
+              >
+                {isLoading ? 'Carregando…' : 'Atualizar'}
+              </Button>
+              <Button
+                onClick={() => setShowComparison(!showComparison)}
+                variant="secondary"
+                className="bg-transparent border border-system-separator/30 hover:bg-system-fill-secondary/30 text-system-label-primary rounded-full px-5 py-2 text-sm font-medium transition-all"
+              >
+                {showComparison ? 'Ocultar comparação' : 'Comparar períodos'}
+              </Button>
+            </div>
           </div>
         </div>
-        
-        {kpiData && funnelData && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            <Button 
-              onClick={() => exportBiDataToCsv(kpiData, funnelData, startDate, endDate, getSelectedUserName())}
-              variant="secondary"
-              className="bg-apple-green/10 hover:bg-apple-green/20 text-apple-green border border-apple-green/30 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200"
-            >
-              <Icon name="download" className="w-4 h-4 mr-2" />
-              Exportar CSV
-            </Button>
-            <Button 
-              onClick={() => exportBiDataToPdf(kpiData, funnelData, startDate, endDate, getSelectedUserName())}
-              variant="secondary"
-              className="bg-apple-red/10 hover:bg-apple-red/20 text-apple-red border border-apple-red/30 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200"
-            >
-              <Icon name="file-text" className="w-4 h-4 mr-2" />
-              Exportar PDF
-            </Button>
-            <Button 
-              onClick={() => exportBiDataToExcel(kpiData, funnelData, startDate, endDate, getSelectedUserName())}
-              variant="secondary"
-              className="bg-apple-blue/10 hover:bg-apple-blue/20 text-apple-blue border border-apple-blue/30 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200"
-            >
-              <Icon name="table" className="w-4 h-4 mr-2" />
-              Exportar Excel
-            </Button>
-          </div>
-        )}
-      </Card>
+      </header>
+
+      {kpiData && funnelData && (
+        <div className="flex flex-wrap gap-2 mt-3">
+          <Button 
+            onClick={() => exportBiDataToCsv(kpiData, funnelData, startDate, endDate, getSelectedUserName())}
+            variant="secondary"
+            className="bg-system-bg-secondary/50 hover:bg-system-bg-secondary text-system-label-primary border border-system-separator/40 rounded-full px-4 py-2 text-xs font-medium transition-all"
+          >
+            Exportar CSV
+          </Button>
+          <Button 
+            onClick={() => exportBiDataToPdf(kpiData, funnelData, startDate, endDate, getSelectedUserName())}
+            variant="secondary"
+            className="bg-system-bg-secondary/50 hover:bg-system-bg-secondary text-system-label-primary border border-system-separator/40 rounded-full px-4 py-2 text-xs font-medium transition-all"
+          >
+            Exportar PDF
+          </Button>
+          <Button 
+            onClick={() => exportBiDataToExcel(kpiData, funnelData, startDate, endDate, getSelectedUserName())}
+            variant="secondary"
+            className="bg-system-bg-secondary/50 hover:bg-system-bg-secondary text-system-label-primary border border-system-separator/40 rounded-full px-4 py-2 text-xs font-medium transition-all"
+          >
+            Exportar Excel
+          </Button>
+        </div>
+      )}
 
       {kpiData && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="text-center p-6 bg-gradient-to-br from-apple-green/10 to-apple-green/5 border border-apple-green/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <div className="text-2xl mb-2">💰</div>
-            <h3 className="text-sm font-semibold text-system-label-secondary mb-2">Receita Total (VGV)</h3>
-            <p className="text-3xl font-bold text-apple-green">{formatCurrency(kpiData.vgvTotal)}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="text-center p-5 bg-system-bg-secondary/40 border border-system-separator/40 rounded-2xl">
+            <h3 className="text-sm font-medium text-system-label-secondary mb-1">Receita Total (VGV)</h3>
+            <p className="text-2xl font-semibold text-system-label-primary">{formatCurrency(kpiData.vgvTotal)}</p>
           </Card>
 
-          <Card className="text-center p-6 bg-gradient-to-br from-apple-blue/10 to-apple-blue/5 border border-apple-blue/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <div className="text-2xl mb-2">📈</div>
-            <h3 className="text-sm font-semibold text-system-label-secondary mb-2">Taxa de Conversão</h3>
-            <p className={`text-3xl font-bold ${conversionRate >= 20 ? 'text-apple-green' : 'text-apple-orange'}`}>{conversionRate}%</p>
+          <Card className="text-center p-5 bg-system-bg-secondary/40 border border-system-separator/40 rounded-2xl">
+            <h3 className="text-sm font-medium text-system-label-secondary mb-1">Taxa de Conversão</h3>
+            <p className="text-2xl font-semibold text-system-label-primary">{conversionRate}%</p>
           </Card>
 
-          <Card className="text-center p-6 bg-gradient-to-br from-apple-purple/10 to-apple-purple/5 border border-apple-purple/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <div className="text-2xl mb-2">🎟️</div>
-            <h3 className="text-sm font-semibold text-system-label-secondary mb-2">Ticket Médio</h3>
-            <p className="text-3xl font-bold text-apple-purple">{formatCurrency(kpiData.ticketMedio || 0)}</p>
+          <Card className="text-center p-5 bg-system-bg-secondary/40 border border-system-separator/40 rounded-2xl">
+            <h3 className="text-sm font-medium text-system-label-secondary mb-1">Ticket Médio</h3>
+            <p className="text-2xl font-semibold text-system-label-primary">{formatCurrency(kpiData.ticketMedio || 0)}</p>
           </Card>
 
-          <Card className="text-center p-6 bg-gradient-to-br from-apple-orange/10 to-apple-orange/5 border border-apple-orange/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <div className="text-2xl mb-2">👥</div>
-            <h3 className="text-sm font-semibold text-system-label-secondary mb-2">Número de Leads</h3>
-            <p className="text-3xl font-bold text-apple-orange">{totalLeads}</p>
+          <Card className="text-center p-5 bg-system-bg-secondary/40 border border-system-separator/40 rounded-2xl">
+            <h3 className="text-sm font-medium text-system-label-secondary mb-1">Número de Leads</h3>
+            <p className="text-2xl font-semibold text-system-label-primary">{totalLeads}</p>
           </Card>
         </div>
       )}
 
       {funnelData && (
-        <Card className="p-6 bg-system-bg-secondary/30 backdrop-blur-sm border border-system-separator/50 shadow-xl">
-          <h3 className="text-2xl font-bold text-system-label-primary mb-8 text-center">🔄 Funil de Vendas</h3>
+        <Card className="p-6 bg-system-bg-secondary/40 border border-system-separator/40 rounded-2xl">
+          <h3 className="text-xl font-semibold text-system-label-primary mb-6 text-center flex items-center justify-center gap-2"><Icon name="leaderboard" aria-label="Funil de Vendas" /> Funil de Vendas</h3>
           <div className="w-full h-96">
             <ResponsiveContainer>
               <FunnelChart>
@@ -354,8 +431,8 @@ export const DashboardGestor: React.FC = () => {
         </Card>
       )}
       {conversionSeries && conversionSeries.length > 0 && (
-        <Card className="p-6 bg-system-bg-secondary/30 backdrop-blur-sm border border-system-separator/50 shadow-xl mt-6">
-          <h3 className="text-2xl font-bold text-system-label-primary mb-4 text-center">📈 Taxa de Conversão ao longo do tempo</h3>
+        <Card className="p-6 bg-system-bg-secondary/40 border border-system-separator/40 rounded-2xl mt-6">
+          <h3 className="text-xl font-semibold text-system-label-primary mb-4 text-center flex items-center justify-center gap-2"><Icon name="trending_up" aria-label="Taxa de Conversão" /> Taxa de Conversão ao longo do tempo</h3>
           <div className="w-full h-80">
             <ResponsiveContainer>
               <LineChart data={conversionSeries}>
