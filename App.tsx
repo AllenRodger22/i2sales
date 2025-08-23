@@ -96,36 +96,38 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'user
                 return (
                     <ProtectedRoleRoute requiredRole={['manager', 'admin']}>
                         <div className="min-h-full flex flex-col">
-                            <nav className="bg-system-bg-secondary/80 backdrop-blur-md border-b border-system-separator/50 p-4">
+                            <nav className="glass-panel border-b border-glass-border/50 p-4 sticky top-0 z-50">
                                 <div className="flex items-center justify-between max-w-7xl mx-auto">
                                     <div className="flex items-center space-x-2">
                                         <button
                                             onClick={() => setView({ type: 'DASHBOARD_GESTOR' })}
-                                            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                                            className={`px-6 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${
                                                 view.type === 'DASHBOARD_GESTOR'
-                                                    ? 'bg-apple-blue text-white shadow-lg shadow-apple-blue/25'
-                                                    : 'text-system-label-primary hover:bg-system-fill-primary/50 hover:scale-105'
+                                                    ? 'bg-accent-orange text-white shadow-lg shadow-accent-orange/25 scale-105'
+                                                    : 'glass-card text-system-label-primary hover:scale-105 hover:shadow-lg'
                                             }`}
                                         >
-                                            Dashboard BI
+                                            📊 Dashboard BI
                                         </button>
                                         <button
                                             onClick={() => setView({ type: 'DASHBOARD' })}
-                                            className="px-4 py-2 rounded-xl text-sm font-medium text-system-label-primary hover:bg-system-fill-primary/50 hover:scale-105 transition-all duration-200"
+                                            className="px-6 py-3 rounded-2xl text-sm font-semibold glass-card text-system-label-primary hover:scale-105 hover:shadow-lg transition-all duration-300"
                                         >
-                                            Visão Corretor
+                                            👤 Visão Usuário
                                         </button>
                                     </div>
                                     <button
                                         onClick={onLogout}
-                                        className="px-4 py-2 rounded-xl text-sm font-medium text-system-label-secondary hover:bg-system-fill-primary/50 hover:text-system-label-primary transition-all duration-200"
+                                        className="px-6 py-3 rounded-2xl text-sm font-semibold glass-card text-system-label-secondary hover:text-system-label-primary hover:scale-105 transition-all duration-300"
                                     >
                                         Sair
                                     </button>
                                 </div>
                             </nav>
-                            <div className="flex-1 bg-system-bg-primary">
-                                <DashboardGestor />
+                            <div className="flex-1 p-6">
+                                <div className="max-w-7xl mx-auto">
+                                    <DashboardGestor />
+                                </div>
                             </div>
                         </div>
                     </ProtectedRoleRoute>

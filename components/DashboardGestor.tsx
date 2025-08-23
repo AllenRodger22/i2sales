@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from './Card';
 import { Button } from './Button';
 import { Icon } from './Icon';
-import { apiGetKpis, apiGetFunnel, apiGetCorretores, apiGetConversionSeries } from '../services/api';
+import { apiGetKpis, apiGetFunnel, apiGetCorretores } from '../services/api';
 import type { UserOption } from '../types';
 import { exportBiDataToCsv, exportBiDataToPdf, exportBiDataToExcel } from '../utils/biExporter';
 import {
@@ -58,7 +58,6 @@ export const DashboardGestor: React.FC = () => {
   const [showComparison, setShowComparison] = useState(false);
   const [comparisonKpiData, setComparisonKpiData] = useState<KpiData | null>(null);
   const [comparisonFunnelData, setComparisonFunnelData] = useState<FunnelData | null>(null);
-  const [conversionSeries, setConversionSeries] = useState<{ date: string; leads: number; vendas: number; conversion: number; }[]>([]);
   const [isMobile, setIsMobile] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -108,15 +107,13 @@ export const DashboardGestor: React.FC = () => {
         params.set('userIds', selectedUsers.join(','));
       }
       
-      const [kpis, funnel, series] = await Promise.all([
+      const [kpis, funnel] = await Promise.all([
         apiGetKpis(params.toString()),
-        apiGetFunnel(params.toString()),
-        apiGetConversionSeries(params.toString())
+        apiGetFunnel(params.toString())
       ]);
       
       setKpiData(kpis);
       setFunnelData(funnel);
-      setConversionSeries(Array.isArray(series) ? series : []);
       
       if (showComparison) {
         await fetchComparisonData();
@@ -223,7 +220,7 @@ export const DashboardGestor: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto space-y-6">
+    <div className="space-y-8">
       {isMobile && (
         <div className="mb-4 rounded-2xl border border-system-separator/40 bg-system-bg-secondary/60 text-system-label-primary px-4 py-3 text-center font-semibold tracking-wide">
           ABRA NO PC OU LAPTOP!!
@@ -231,37 +228,49 @@ export const DashboardGestor: React.FC = () => {
       )}
 
       
-      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-system-label-primary">{titleText}</h1>
-          <p className="text-system-label-secondary mt-1">Análise de performance e inteligência de negócios</p>
-        </div>
-        <div className="w-full sm:w-auto sm:ml-auto">
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              aria-label="Data Inicial"
-              className="w-full sm:w-auto bg-system-bg-primary/80 text-system-label-primary placeholder-system-label-secondary border border-system-separator/40 rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all"
-            />
-
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              aria-label="Data Final"
-              className="w-full sm:w-auto bg-system-bg-primary/80 text-system-label-primary placeholder-system-label-secondary border border-system-separator/40 rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all"
-            />
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setIsPopoverOpen(!isPopoverOpen)}
-                className="min-w-[260px] bg-system-bg-primary/70 text-system-label-primary border border-system-separator/40 rounded-2xl px-3 py-2 text-sm flex flex-wrap gap-1 items-center justify-between focus:outline-none focus:ring-2 focus:ring-apple-blue/40"
-                aria-haspopup="listbox"
-                aria-expanded={isPopoverOpen}
-                aria-label="Filtrar por Corretor(es)"
-              >
+      <div className="glass-card rounded-3xl p-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight text-system-label-primary mb-2">
+              Dashboard de Inteligência
+            </h1>
+            <p className="text-lg text-system-label-secondary">
+              Análise completa de performance e métricas de vendas
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="glass-panel rounded-2xl p-4">
+              <label className="block text-sm font-medium text-system-label-secondary mb-2">
+                Período de Análise
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="glass-card rounded-xl px-4 py-2 text-sm border-0 focus:ring-2 focus:ring-accent-orange/50 transition-all"
+                />
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="glass-card rounded-xl px-4 py-2 text-sm border-0 focus:ring-2 focus:ring-accent-orange/50 transition-all"
+                />
+              </div>
+            </div>
+            <div className="glass-panel rounded-2xl p-4">
+              <label className="block text-sm font-medium text-system-label-secondary mb-2">
+                Filtrar por Usuário
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsPopoverOpen(!isPopoverOpen)}
+                  className="min-w-[200px] glass-card rounded-xl px-4 py-2 text-sm border-0 focus:ring-2 focus:ring-accent-orange/50 transition-all flex flex-wrap gap-1 items-center justify-between"
+                  aria-haspopup="listbox"
+                  aria-expanded={isPopoverOpen}
+                  aria-label="Filtrar por Usuário"
+                >
                 <div className="flex flex-wrap gap-1">
                   {selectedUsers.length === 0 && (
                     <span className="text-system-label-secondary">Todos os corretores</span>
@@ -281,15 +290,15 @@ export const DashboardGestor: React.FC = () => {
                 <Icon name="expand_more" aria-label="Abrir filtro" />
               </button>
 
-              {isPopoverOpen && (
-                <div className="absolute z-20 mt-2 w-[320px] rounded-2xl border border-system-separator/40 bg-system-bg-secondary/95 backdrop-blur-xl shadow-xl p-3 right-0">
+                {isPopoverOpen && (
+                  <div className="absolute z-20 mt-2 w-[320px] glass-overlay rounded-2xl p-3 right-0">
                   <div className="mb-2">
                     <input
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Buscar corretores…"
-                      className="w-full bg-system-bg-primary/70 text-system-label-primary border border-system-separator/40 rounded-2xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/40"
+                      placeholder="Buscar usuários…"
+                      className="w-full glass-card rounded-xl px-3 py-2 text-sm border-0 focus:ring-2 focus:ring-accent-orange/50"
                     />
                   </div>
                   <div className="flex items-center gap-2 mb-2">
@@ -321,85 +330,91 @@ export const DashboardGestor: React.FC = () => {
                       <div className="py-4 text-center text-system-label-secondary text-sm">Nenhum corretor encontrado</div>
                     )}
                   </div>
-                  <div className="mt-3 flex justify-end gap-2">
-                    <Button variant="secondary" className="bg-transparent border border-system-separator/30 text-system-label-primary hover:bg-system-fill-secondary/30 rounded-full px-4 py-1.5 text-sm" onClick={() => setIsPopoverOpen(false)}>Fechar</Button>
-                    <Button className="bg-apple-blue hover:bg-apple-blue/90 text-white rounded-full px-4 py-1.5 text-sm" onClick={() => setIsPopoverOpen(false)}>Aplicar</Button>
+                    <div className="mt-3 flex justify-end gap-2">
+                      <button className="glass-panel rounded-full px-4 py-1.5 text-sm text-system-label-primary hover:scale-105 transition-all" onClick={() => setIsPopoverOpen(false)}>Fechar</button>
+                      <button className="bg-accent-orange text-white rounded-full px-4 py-1.5 text-sm hover:scale-105 transition-all" onClick={() => setIsPopoverOpen(false)}>Aplicar</button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
             <div className="flex gap-2">
-              <Button
+              <button
                 onClick={fetchData}
                 disabled={isLoading}
-                className="bg-apple-blue hover:bg-apple-blue/90 text-white rounded-full px-5 py-2 text-sm font-medium transition-all"
+                className="bg-accent-orange hover:scale-105 text-white rounded-2xl px-5 py-2 text-sm font-medium transition-all duration-300 shadow-lg shadow-accent-orange/25"
               >
                 {isLoading ? 'Carregando…' : 'Atualizar'}
-              </Button>
-              <Button
+              </button>
+              <button
                 onClick={() => setShowComparison(!showComparison)}
-                variant="secondary"
-                className="bg-transparent border border-system-separator/30 hover:bg-system-fill-secondary/30 text-system-label-primary rounded-full px-5 py-2 text-sm font-medium transition-all"
+                className="glass-panel hover:scale-105 text-system-label-primary rounded-2xl px-5 py-2 text-sm font-medium transition-all duration-300"
               >
                 {showComparison ? 'Ocultar comparação' : 'Comparar períodos'}
-              </Button>
+              </button>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       {kpiData && funnelData && (
-        <div className="flex flex-wrap gap-2 mt-3">
-          <Button 
+        <div className="flex flex-wrap gap-2">
+          <button 
             onClick={() => exportBiDataToCsv(kpiData, funnelData, startDate, endDate, getSelectedUserName())}
-            variant="secondary"
-            className="bg-system-bg-secondary/50 hover:bg-system-bg-secondary text-system-label-primary border border-system-separator/40 rounded-full px-4 py-2 text-xs font-medium transition-all"
+            className="glass-panel hover:scale-105 text-accent-orange rounded-2xl px-4 py-2 text-xs font-medium transition-all duration-300"
           >
             Exportar CSV
-          </Button>
-          <Button 
+          </button>
+          <button 
             onClick={() => exportBiDataToPdf(kpiData, funnelData, startDate, endDate, getSelectedUserName())}
-            variant="secondary"
-            className="bg-system-bg-secondary/50 hover:bg-system-bg-secondary text-system-label-primary border border-system-separator/40 rounded-full px-4 py-2 text-xs font-medium transition-all"
+            className="glass-panel hover:scale-105 text-apple-red rounded-2xl px-4 py-2 text-xs font-medium transition-all duration-300"
           >
             Exportar PDF
-          </Button>
-          <Button 
+          </button>
+          <button 
             onClick={() => exportBiDataToExcel(kpiData, funnelData, startDate, endDate, getSelectedUserName())}
-            variant="secondary"
-            className="bg-system-bg-secondary/50 hover:bg-system-bg-secondary text-system-label-primary border border-system-separator/40 rounded-full px-4 py-2 text-xs font-medium transition-all"
+            className="glass-panel hover:scale-105 text-apple-orange rounded-2xl px-4 py-2 text-xs font-medium transition-all duration-300"
           >
             Exportar Excel
-          </Button>
+          </button>
         </div>
       )}
 
       {kpiData && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="text-center p-5 bg-system-bg-secondary/40 border border-system-separator/40 rounded-2xl">
-            <h3 className="text-sm font-medium text-system-label-secondary mb-1">Receita Total (VGV)</h3>
-            <p className="text-2xl font-semibold text-system-label-primary">{formatCurrency(kpiData.vgvTotal)}</p>
-          </Card>
-
-          <Card className="text-center p-5 bg-system-bg-secondary/40 border border-system-separator/40 rounded-2xl">
-            <h3 className="text-sm font-medium text-system-label-secondary mb-1">Taxa de Conversão</h3>
-            <p className="text-2xl font-semibold text-system-label-primary">{conversionRate}%</p>
-          </Card>
-
-          <Card className="text-center p-5 bg-system-bg-secondary/40 border border-system-separator/40 rounded-2xl">
-            <h3 className="text-sm font-medium text-system-label-secondary mb-1">Ticket Médio</h3>
-            <p className="text-2xl font-semibold text-system-label-primary">{formatCurrency(kpiData.ticketMedio || 0)}</p>
-          </Card>
-
-          <Card className="text-center p-5 bg-system-bg-secondary/40 border border-system-separator/40 rounded-2xl">
-            <h3 className="text-sm font-medium text-system-label-secondary mb-1">Número de Leads</h3>
-            <p className="text-2xl font-semibold text-system-label-primary">{totalLeads}</p>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { title: 'VGV Total', value: kpiData.vgvTotal, format: 'currency', icon: '💰' },
+            { title: 'Taxa de Conversão', value: conversionRate, format: 'percent', icon: '📊' },
+            { title: 'Ticket Médio', value: kpiData.ticketMedio || 0, format: 'currency', icon: '💳' },
+            { title: 'Total de Leads', value: totalLeads, format: 'number', icon: '📞' }
+          ].map((kpi, index) => (
+            <div key={index} className="glass-card rounded-3xl p-6 hover:scale-105 transition-all duration-300 group">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-3xl group-hover:scale-110 transition-transform duration-300">
+                  {kpi.icon}
+                </span>
+                <div className="w-12 h-12 rounded-full bg-accent-orange/10 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-accent-orange/20"></div>
+                </div>
+              </div>
+              <h3 className="text-sm font-medium text-system-label-secondary mb-2">
+                {kpi.title}
+              </h3>
+              <p className="text-3xl font-bold text-system-label-primary">
+                {kpi.format === 'currency' 
+                  ? formatCurrency(kpi.value)
+                  : kpi.format === 'percent'
+                  ? `${kpi.value}%`
+                  : kpi.value.toLocaleString('pt-BR')
+                }
+              </p>
+            </div>
+          ))}
         </div>
       )}
 
       {funnelData && (
-        <Card className="p-6 bg-system-bg-secondary/40 border border-system-separator/40 rounded-2xl">
+        <div className="glass-card rounded-3xl p-6">
           <h3 className="text-xl font-semibold text-system-label-primary mb-6 text-center flex items-center justify-center gap-2"><Icon name="leaderboard" aria-label="Funil de Vendas" /> Funil de Vendas</h3>
           <div className="w-full h-96">
             <ResponsiveContainer>
@@ -427,23 +442,7 @@ export const DashboardGestor: React.FC = () => {
             <div className="text-sm">Interessado → Documentação: <span className="font-semibold">{funnelData.conversoes.interessadoParaDocumentacao}%</span></div>
             <div className="text-sm">Documentação → Venda: <span className="font-semibold">{funnelData.conversoes.documentacaoParaVenda}%</span></div>
           </div>
-        </Card>
-      )}
-      {conversionSeries && conversionSeries.length > 0 && (
-        <Card className="p-6 bg-system-bg-secondary/40 border border-system-separator/40 rounded-2xl mt-6">
-          <h3 className="text-xl font-semibold text-system-label-primary mb-4 text-center flex items-center justify-center gap-2"><Icon name="trending_up" aria-label="Taxa de Conversão" /> Taxa de Conversão ao longo do tempo</h3>
-          <div className="w-full h-80">
-            <ResponsiveContainer>
-              <LineChart data={conversionSeries}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
-                <ReTooltip formatter={(v, n) => n === 'conversion' ? [`${v}%`, 'Conversão'] : [v, n]} />
-                <Line type="monotone" dataKey="conversion" stroke="#007aff" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
+        </div>
       )}
     </div>
   );

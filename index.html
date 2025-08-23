@@ -20,6 +20,13 @@
             --system-label-tertiary: #8e8e93;
 
             --system-separator: #d2d2d7;
+            
+            /* Glassmorphism design tokens */
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: rgba(0, 0, 0, 0.1);
+            --accent-orange: hsl(25, 95%, 53%);
+            --nature-bg: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
         }
         .dark {
             --system-bg-primary: #000000;
@@ -34,10 +41,48 @@
             --system-label-tertiary: #8e8e93;
 
             --system-separator: #3a3a3c;
+            
+            /* Dark theme glassmorphism */
+            --glass-bg: rgba(0, 0, 0, 0.2);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: rgba(0, 0, 0, 0.3);
+            --nature-bg: linear-gradient(135deg, rgba(35, 37, 38, 0.4) 0%, rgba(65, 67, 69, 0.4) 100%);
         }
+        
+        /* Global glassmorphism background */
         body {
-            background-color: var(--system-bg-secondary);
+            background: var(--system-bg-secondary);
+            background-image: var(--nature-bg);
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
             color: var(--system-label-primary);
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism utility classes */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--glass-shadow);
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 16px var(--glass-shadow);
+        }
+
+        .glass-overlay {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 12px 40px var(--glass-shadow);
         }
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
@@ -72,6 +117,7 @@
                         'apple-teal': '#64D2FF',
                         'apple-indigo': '#5E5CE6',
                         'apple-lime': '#32D796',
+                        'accent-orange': 'var(--accent-orange)',
                     },
                     borderRadius: {
                         'xl': '1rem',

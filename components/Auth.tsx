@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from './Button';
 import { Icon } from './Icon';
 
-const inputClasses = "mt-1 block w-full bg-system-bg-tertiary dark:bg-system-bg-secondary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
+const inputClasses = "mt-1 block w-full glass-card rounded-2xl px-4 py-3 border-0 focus:ring-2 focus:ring-accent-orange/50 transition-all placeholder-system-label-tertiary";
 
 const AuthForm: React.FC<{ isRegister: boolean }> = ({ isRegister }) => {
     const { login, register, error } = useAuth();
@@ -44,12 +44,19 @@ const AuthForm: React.FC<{ isRegister: boolean }> = ({ isRegister }) => {
                 <label htmlFor="password" className="text-sm font-medium text-system-label-secondary">Senha</label>
                 <input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required className={inputClasses} />
             </div>
-            {error && <p className="text-sm text-apple-red text-center">{error}</p>}
+            {error && (
+                <div className="glass-panel rounded-2xl p-4 border border-apple-red/30">
+                    <p className="text-apple-red text-sm text-center">{error}</p>
+                </div>
+            )}
             <div className="pt-2">
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-accent-orange text-white rounded-2xl px-6 py-3 font-semibold hover:scale-105 disabled:opacity-50 disabled:scale-100 transition-all duration-300 shadow-lg shadow-accent-orange/25"
+                >
                     {isLoading ? 'Carregando...' : (isRegister ? 'Registrar e Entrar' : 'Entrar')}
-                </Button>
-                
+                </button>
             </div>
         </form>
     );
@@ -59,26 +66,25 @@ export const AuthScreen: React.FC = () => {
     const [isRegister, setIsRegister] = useState(false);
 
     return (
-        <div className="fixed inset-0 bg-system-bg-secondary flex justify-center items-center z-50 p-4">
-            <div className="bg-system-bg-primary rounded-2xl shadow-soft dark:shadow-soft-dark w-full max-w-sm">
-                <div className="p-6 sm:p-8">
-                     <div className="text-center mb-6">
-                        <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-apple-orange/15 flex items-center justify-center">
-                            <Icon name="arrow-up-right" className="w-8 h-8 text-apple-orange" />
-                        </div>
-                        <h1 className="text-2xl font-bold text-system-label-primary">
-                            {isRegister ? 'Crie sua Conta' : 'Bem-vindo(a) de volta!'}
-                        </h1>
-                        <p className="text-system-label-secondary mt-1 text-sm">
-                            {isRegister ? 'Preencha os dados para começar.' : 'Faça login para acessar seu painel.'}
-                        </p>
+        <div className="min-h-screen flex items-center justify-center p-6">
+            <div className="glass-overlay rounded-3xl p-8 w-full max-w-md">
+                <div className="text-center mb-8">
+                    <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-accent-orange/15 flex items-center justify-center">
+                        <Icon name="arrow-up-right" className="w-10 h-10 text-accent-orange" />
                     </div>
-
-                    <AuthForm isRegister={isRegister} />
+                    <h1 className="text-3xl font-bold text-system-label-primary mb-2">
+                        {isRegister ? 'Criar conta' : 'Bem-vindo de volta'}
+                    </h1>
+                    <p className="text-system-label-secondary">
+                        {isRegister ? 'Crie sua conta para começar' : 'Entre na sua conta para continuar'}
+                    </p>
                 </div>
-                <div className="p-4 bg-system-bg-secondary rounded-b-2xl text-center">
-                    <button onClick={() => setIsRegister(!isRegister)} className="text-sm text-apple-blue font-semibold hover:underline">
-                        {isRegister ? 'Já tem uma conta? Faça login.' : 'Não tem uma conta? Registre-se.'}
+
+                <AuthForm isRegister={isRegister} />
+                
+                <div className="mt-6 text-center">
+                    <button onClick={() => setIsRegister(!isRegister)} className="text-accent-orange hover:underline transition-all">
+                        {isRegister ? 'Já tem conta? Entrar' : 'Não tem conta? Criar uma'}
                     </button>
                 </div>
             </div>

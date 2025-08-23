@@ -175,60 +175,121 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
     const baseInputClasses = "bg-system-bg-primary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
 
     return (
-        <div className="min-h-full flex flex-col">
-            <div className="p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto space-y-8 flex-shrink-0">
-                <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div>
-                        <h1 className="text-4xl font-bold tracking-tight text-system-label-primary">Painel</h1>
-                        <p className="text-system-label-secondary mt-1">Bem-vindo(a), {userName}.</p>
+        <div className="min-h-screen">
+            <div className="p-6 lg:p-8 w-full max-w-7xl mx-auto space-y-8">
+                <div className="glass-card rounded-3xl p-8">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                        <div>
+                            <h1 className="text-4xl font-bold tracking-tight text-system-label-primary mb-2">
+                                Painel de Controle
+                            </h1>
+                            <p className="text-lg text-system-label-secondary">
+                                Bem-vindo(a), {userName}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-3 flex-wrap">
+                            {(userRole === 'manager' || userRole === 'admin') && onShowBiDashboard && (
+                                <button
+                                    onClick={onShowBiDashboard}
+                                    className="px-6 py-3 rounded-2xl text-sm font-semibold bg-accent-orange text-white shadow-lg shadow-accent-orange/25 hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                                >
+                                    <Icon name="bar-chart-3" className="w-4 h-4" />
+                                    Dashboard BI
+                                </button>
+                            )}
+                            <button
+                                onClick={onShowProductivityReport}
+                                className="px-6 py-3 rounded-2xl text-sm font-semibold glass-card hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                            >
+                                <Icon name="bar-chart-2" className="w-4 h-4" />
+                                Produtividade
+                            </button>
+                            <button
+                                onClick={() => setIsImportModalOpen(true)}
+                                className="px-6 py-3 rounded-2xl text-sm font-semibold glass-card hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                            >
+                                <Icon name="upload" className="w-4 h-4" />
+                                Importar
+                            </button>
+                            <button
+                                onClick={handleExport}
+                                className="px-6 py-3 rounded-2xl text-sm font-semibold glass-card hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                            >
+                                <Icon name="export" className="w-4 h-4" />
+                                Exportar
+                            </button>
+                            <button
+                                onClick={onLogout}
+                                className="px-6 py-3 rounded-2xl text-sm font-semibold glass-panel text-system-label-secondary hover:text-system-label-primary hover:scale-105 transition-all duration-300"
+                            >
+                                Sair
+                            </button>
+                            <button
+                                onClick={onAddClient}
+                                className="px-6 py-3 rounded-2xl text-sm font-semibold bg-accent-orange text-white shadow-lg shadow-accent-orange/25 hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                            >
+                                <Icon name="plus" className="w-4 h-4" />
+                                Novo Cliente
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
-                        {(userRole === 'manager' || userRole === 'admin') && onShowBiDashboard && (
-                            <Button variant="secondary" onClick={onShowBiDashboard} className="bg-apple-blue/10 hover:bg-apple-blue/20 text-apple-blue border border-apple-blue/30">
-                                Dashboard BI
-                            </Button>
-                        )}
-                         <Button variant="secondary" onClick={onShowProductivityReport}>
-                            <Icon name="bar-chart-2" className="w-4 h-4 mr-2" />
-                            Produtividade
-                        </Button>
-                         <Button variant="secondary" onClick={() => setIsImportModalOpen(true)}>
-                            <Icon name="upload" className="w-4 h-4 mr-2" />
-                            Importar
-                        </Button>
-                         <Button variant="secondary" onClick={handleExport}>
-                            <Icon name="export" className="w-4 h-4 mr-2" />
-                            Exportar
-                        </Button>
-                        <Button onClick={onLogout} variant="secondary">Sair</Button>
-                        <Button onClick={onAddClient}>
-                            <Icon name="plus" className="w-4 h-4 mr-2" />
-                            Novo Cliente
-                        </Button>
-                    </div>
-                </header>
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card>
-                        <h3 className="text-sm font-semibold text-system-label-secondary mb-3">Follow-up</h3>
+                    <div className="glass-card rounded-3xl p-6">
+                        <h3 className="text-lg font-semibold text-system-label-secondary mb-4">Follow-up</h3>
                         <div className="flex justify-around items-center text-center">
-                            <KpiCard title="Atrasado" value={overdueFollowUps} colorClass="text-apple-red" isSelected={kpiFilter === 'overdue'} onClick={() => handleKpiFilterClick('overdue')} />
-                            <div className="h-10 w-px bg-system-separator"></div>
-                            <KpiCard title="Hoje" value={followUpsToday} colorClass="text-apple-orange" isSelected={kpiFilter === 'today'} onClick={() => handleKpiFilterClick('today')} />
-                            <div className="h-10 w-px bg-system-separator"></div>
-                           <KpiCard title="Futuro" value={futureFollowUps} colorClass="text-apple-indigo" isSelected={kpiFilter === 'future'} onClick={() => handleKpiFilterClick('future')} />
+                            <div 
+                                onClick={() => handleKpiFilterClick('overdue')}
+                                className={`p-4 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-105 ${
+                                    kpiFilter === 'overdue' ? 'bg-accent-orange/20 ring-2 ring-accent-orange' : 'hover:bg-system-fill-primary/50'
+                                }`}
+                            >
+                                <p className="text-3xl font-bold text-apple-red">{overdueFollowUps}</p>
+                                <p className="text-sm text-system-label-secondary mt-1">Atrasado</p>
+                            </div>
+                            <div className="h-12 w-px bg-system-separator/30"></div>
+                            <div 
+                                onClick={() => handleKpiFilterClick('today')}
+                                className={`p-4 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-105 ${
+                                    kpiFilter === 'today' ? 'bg-accent-orange/20 ring-2 ring-accent-orange' : 'hover:bg-system-fill-primary/50'
+                                }`}
+                            >
+                                <p className="text-3xl font-bold text-apple-orange">{followUpsToday}</p>
+                                <p className="text-sm text-system-label-secondary mt-1">Hoje</p>
+                            </div>
+                            <div className="h-12 w-px bg-system-separator/30"></div>
+                            <div 
+                                onClick={() => handleKpiFilterClick('future')}
+                                className={`p-4 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-105 ${
+                                    kpiFilter === 'future' ? 'bg-accent-orange/20 ring-2 ring-accent-orange' : 'hover:bg-system-fill-primary/50'
+                                }`}
+                            >
+                                <p className="text-3xl font-bold text-apple-indigo">{futureFollowUps}</p>
+                                <p className="text-sm text-system-label-secondary mt-1">Futuro</p>
+                            </div>
                         </div>
-                    </Card>
+                    </div>
 
-                    <Card onClick={() => handleKpiFilterClick('primeiro-atendimento')} className={`text-center flex flex-col justify-center cursor-pointer transition-all ${kpiFilter === 'primeiro-atendimento' ? 'ring-2 ring-apple-blue' : ''}`}>
-                        <h3 className="text-sm font-semibold text-system-label-secondary">Primeiro Atendimento</h3>
-                        <p className="text-4xl font-bold text-system-label-primary mt-2">{primeiroAtendimentoCount}</p>
-                    </Card>
+                    <div 
+                        onClick={() => handleKpiFilterClick('primeiro-atendimento')}
+                        className={`glass-card rounded-3xl p-6 text-center flex flex-col justify-center cursor-pointer transition-all duration-300 hover:scale-105 ${
+                            kpiFilter === 'primeiro-atendimento' ? 'ring-2 ring-accent-orange bg-accent-orange/10' : ''
+                        }`}
+                    >
+                        <h3 className="text-lg font-semibold text-system-label-secondary mb-2">Primeiro Atendimento</h3>
+                        <p className="text-4xl font-bold text-system-label-primary">{primeiroAtendimentoCount}</p>
+                    </div>
 
-                    <Card onClick={() => setKpiFilter(null)} className={`text-center flex flex-col justify-center cursor-pointer transition-all ${kpiFilter === null ? 'ring-2 ring-apple-blue' : ''}`}>
-                        <h3 className="text-sm font-semibold text-system-label-secondary">Leads na Base</h3>
-                        <p className="text-4xl font-bold text-system-label-primary mt-2">{totalLeads}</p>
-                    </Card>
+                    <div 
+                        onClick={() => setKpiFilter(null)}
+                        className={`glass-card rounded-3xl p-6 text-center flex flex-col justify-center cursor-pointer transition-all duration-300 hover:scale-105 ${
+                            kpiFilter === null ? 'ring-2 ring-accent-orange bg-accent-orange/10' : ''
+                        }`}
+                    >
+                        <h3 className="text-lg font-semibold text-system-label-secondary mb-2">Leads na Base</h3>
+                        <p className="text-4xl font-bold text-system-label-primary">{totalLeads}</p>
+                    </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
