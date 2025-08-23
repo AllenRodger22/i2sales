@@ -79,7 +79,6 @@ export const DashboardGestor: React.FC = () => {
       }
     };
   }, []);
-  useEffect(() => { fetchUsers(); }, []);
 
 
   const fetchUsers = async () => {
@@ -244,7 +243,7 @@ export const DashboardGestor: React.FC = () => {
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               aria-label="Data Inicial"
-              className="w-full sm:w-auto bg-system-bg-primary/70 text-system-label-primary border border-[#545458] rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/30 transition-all"
+              className="w-full sm:w-auto bg-system-bg-primary/80 text-system-label-primary placeholder-system-label-secondary border border-system-separator/40 rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all"
             />
 
             <input
@@ -252,7 +251,7 @@ export const DashboardGestor: React.FC = () => {
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               aria-label="Data Final"
-              className="w-full sm:w-auto bg-system-bg-primary/70 text-system-label-primary border border-[#545458] rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/30 transition-all"
+              className="w-full sm:w-auto bg-system-bg-primary/80 text-system-label-primary placeholder-system-label-secondary border border-system-separator/40 rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue/40 transition-all"
             />
             <div className="relative">
               <button
