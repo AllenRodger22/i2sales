@@ -169,10 +169,10 @@ export const apiGetCorretores = async (): Promise<any[]> => {
     return data || [];
 };
 
-export const apiGetKpis = (startDate: string, endDate: string) => {
-    return apiRequest(`/api/bi/kpis?startDate=${startDate}&endDate=${endDate}`, 'GET');
+export const apiGetKpis = (params: string) => {
+    return apiRequest(`/api/bi/kpis?${params}`, 'GET');
 };
 
-export const apiGetFunnel = (startDate: string, endDate: string) => {
-    return apiRequest(`/api/bi/funnel?startDate=${startDate}&endDate=${endDate}`, 'GET');
+export const apiGetFunnel = (params: string) => {
+    return apiRequest(`/api/bi/funnel?${params}`, 'GET');
 };

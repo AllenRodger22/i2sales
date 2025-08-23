@@ -103,3 +103,17 @@ export interface SavedDay {
     metrics: DayMetrics;
     prospects: Prospect[];
 }
+
+export interface EnhancedKpiData {
+    vgvTotal: number;
+    numeroLigacoes: number;
+    numeroDocumentos: number;
+    totalVendas: number;
+    ticketMedio?: number;
+    tempoMedioFechamento?: number;
+}
+
+export interface UserOption {
+    id: string;
+    name: string;
+}
