@@ -3,7 +3,7 @@ import { apiLogin, apiRegister } from '../services/api';
 
 interface User {
     name: string;
-    role: 'corretor' | 'gestor';
+    role: 'user' | 'manager';
 }
 
 interface AuthContextType {
@@ -15,7 +15,7 @@ interface AuthContextType {
     register: (details: any) => Promise<void>;
     logout: () => void;
     error: string | null;
-    handleAuthSuccess: (data: { token: string; userName: string; role?: 'corretor' | 'gestor' }) => void;
+    handleAuthSuccess: (data: { token: string; userName: string; role?: 'user' | 'manager' }) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,9 +43,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     }, []);
     
-    const handleAuthSuccess = (data: { token: string; userName: string; role?: 'corretor' | 'gestor' }) => {
+    const handleAuthSuccess = (data: { token: string; userName: string; role?: 'user' | 'manager' }) => {
         setToken(data.token);
-        const newUser = { name: data.userName, role: data.role || 'corretor' };
+        const newUser = { name: data.userName, role: data.role || 'user' };
         setUser(newUser);
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('authUser', JSON.stringify(newUser));

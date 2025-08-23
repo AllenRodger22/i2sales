@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRoleRouteProps {
-  requiredRole: 'corretor' | 'gestor';
+  requiredRole: 'user' | 'manager';
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }
