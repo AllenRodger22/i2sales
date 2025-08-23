@@ -4,6 +4,7 @@ import { Button } from './Button';
 import { Icon } from './Icon';
 import { apiGetKpis, apiGetFunnel, apiGetCorretores } from '../services/api';
 import type { UserOption } from '../types';
+import { exportBiDataToCsv, exportBiDataToPdf, exportBiDataToExcel } from '../utils/biExporter';
 
 interface KpiData {
   vgvTotal: number;
@@ -42,6 +43,9 @@ export const DashboardGestor: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [users, setUsers] = useState<UserOption[]>([]);
+  const [showComparison, setShowComparison] = useState(false);
+  const [comparisonKpiData, setComparisonKpiData] = useState<KpiData | null>(null);
+  const [comparisonFunnelData, setComparisonFunnelData] = useState<FunnelData | null>(null);
 
   const fetchUsers = async () => {
     try {
@@ -68,10 +72,45 @@ export const DashboardGestor: React.FC = () => {
       
       setKpiData(kpis);
       setFunnelData(funnel);
+      
+      if (showComparison) {
+        await fetchComparisonData();
+      }
     } catch (error) {
       console.error('Erro ao buscar dados de BI:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchComparisonData = async () => {
+    if (!showComparison) return;
+    
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    const daysDiff = Math.ceil((endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24));
+    
+    const comparisonStartDate = new Date(startDateObj);
+    comparisonStartDate.setDate(comparisonStartDate.getDate() - daysDiff);
+    const comparisonEndDate = new Date(startDateObj);
+    comparisonEndDate.setDate(comparisonEndDate.getDate() - 1);
+    
+    try {
+      const params = new URLSearchParams({
+        startDate: comparisonStartDate.toISOString().split('T')[0],
+        endDate: comparisonEndDate.toISOString().split('T')[0],
+        ...(selectedUser && { userId: selectedUser })
+      });
+      
+      const [kpis, funnel] = await Promise.all([
+        apiGetKpis(params.toString()),
+        apiGetFunnel(params.toString())
+      ]);
+      
+      setComparisonKpiData(kpis);
+      setComparisonFunnelData(funnel);
+    } catch (error) {
+      console.error('Erro ao buscar dados de comparação:', error);
     }
   };
 
@@ -83,11 +122,30 @@ export const DashboardGestor: React.FC = () => {
     fetchData();
   }, [startDate, endDate, selectedUser]);
 
+  useEffect(() => {
+    if (showComparison) {
+      fetchComparisonData();
+    } else {
+      setComparisonKpiData(null);
+      setComparisonFunnelData(null);
+    }
+  }, [showComparison]);
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     }).format(value);
+  };
+
+  const calculatePercentageChange = (current: number, previous: number) => {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return ((current - previous) / previous * 100);
+  };
+
+  const getSelectedUserName = () => {
+    const user = users.find(u => u.id === selectedUser);
+    return user ? user.name : '';
   };
 
   return (
@@ -138,15 +196,54 @@ export const DashboardGestor: React.FC = () => {
               ))}
             </select>
           </div>
-          <Button 
-            onClick={fetchData} 
-            disabled={isLoading}
-            className="bg-apple-blue hover:bg-apple-blue/90 text-white rounded-xl px-6 py-3 font-medium transition-all duration-200 hover:scale-105 shadow-lg shadow-apple-blue/25"
-          >
-            <Icon name="refresh-cw" className="w-4 h-4 mr-2" />
-            {isLoading ? 'Carregando...' : 'Atualizar'}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={fetchData} 
+              disabled={isLoading}
+              className="bg-apple-blue hover:bg-apple-blue/90 text-white rounded-xl px-6 py-3 font-medium transition-all duration-200 hover:scale-105 shadow-lg shadow-apple-blue/25"
+            >
+              <Icon name="refresh-cw" className="w-4 h-4 mr-2" />
+              {isLoading ? 'Carregando...' : 'Atualizar'}
+            </Button>
+            <Button 
+              onClick={() => setShowComparison(!showComparison)} 
+              variant="secondary"
+              className="bg-system-fill-secondary hover:bg-system-fill-tertiary text-system-label-primary rounded-xl px-6 py-3 font-medium transition-all duration-200"
+            >
+              <Icon name="bar-chart-3" className="w-4 h-4 mr-2" />
+              {showComparison ? 'Ocultar Comparação' : 'Comparar Períodos'}
+            </Button>
+          </div>
         </div>
+        
+        {kpiData && funnelData && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Button 
+              onClick={() => exportBiDataToCsv(kpiData, funnelData, startDate, endDate, getSelectedUserName())}
+              variant="secondary"
+              className="bg-apple-green/10 hover:bg-apple-green/20 text-apple-green border border-apple-green/30 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200"
+            >
+              <Icon name="download" className="w-4 h-4 mr-2" />
+              Exportar CSV
+            </Button>
+            <Button 
+              onClick={() => exportBiDataToPdf(kpiData, funnelData, startDate, endDate, getSelectedUserName())}
+              variant="secondary"
+              className="bg-apple-red/10 hover:bg-apple-red/20 text-apple-red border border-apple-red/30 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200"
+            >
+              <Icon name="file-text" className="w-4 h-4 mr-2" />
+              Exportar PDF
+            </Button>
+            <Button 
+              onClick={() => exportBiDataToExcel(kpiData, funnelData, startDate, endDate, getSelectedUserName())}
+              variant="secondary"
+              className="bg-apple-blue/10 hover:bg-apple-blue/20 text-apple-blue border border-apple-blue/30 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200"
+            >
+              <Icon name="table" className="w-4 h-4 mr-2" />
+              Exportar Excel
+            </Button>
+          </div>
+        )}
       </Card>
 
       {kpiData && (
@@ -155,24 +252,60 @@ export const DashboardGestor: React.FC = () => {
             <div className="text-2xl mb-2">💰</div>
             <h3 className="text-sm font-semibold text-system-label-secondary mb-2">VGV Total</h3>
             <p className="text-3xl font-bold text-apple-green">{formatCurrency(kpiData.vgvTotal)}</p>
+            {showComparison && comparisonKpiData && (
+              <div className="mt-2 text-xs">
+                <span className={`font-medium ${calculatePercentageChange(kpiData.vgvTotal, comparisonKpiData.vgvTotal) >= 0 ? 'text-apple-green' : 'text-apple-red'}`}>
+                  {calculatePercentageChange(kpiData.vgvTotal, comparisonKpiData.vgvTotal) >= 0 ? '↗' : '↘'} 
+                  {Math.abs(calculatePercentageChange(kpiData.vgvTotal, comparisonKpiData.vgvTotal)).toFixed(1)}%
+                </span>
+                <span className="text-system-label-tertiary ml-1">vs período anterior</span>
+              </div>
+            )}
           </Card>
           
           <Card className="text-center p-6 bg-gradient-to-br from-apple-blue/10 to-apple-blue/5 border border-apple-blue/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
             <div className="text-2xl mb-2">📞</div>
             <h3 className="text-sm font-semibold text-system-label-secondary mb-2">Número de Ligações</h3>
             <p className="text-3xl font-bold text-apple-blue">{kpiData.numeroLigacoes}</p>
+            {showComparison && comparisonKpiData && (
+              <div className="mt-2 text-xs">
+                <span className={`font-medium ${calculatePercentageChange(kpiData.numeroLigacoes, comparisonKpiData.numeroLigacoes) >= 0 ? 'text-apple-green' : 'text-apple-red'}`}>
+                  {calculatePercentageChange(kpiData.numeroLigacoes, comparisonKpiData.numeroLigacoes) >= 0 ? '↗' : '↘'} 
+                  {Math.abs(calculatePercentageChange(kpiData.numeroLigacoes, comparisonKpiData.numeroLigacoes)).toFixed(1)}%
+                </span>
+                <span className="text-system-label-tertiary ml-1">vs período anterior</span>
+              </div>
+            )}
           </Card>
           
           <Card className="text-center p-6 bg-gradient-to-br from-apple-purple/10 to-apple-purple/5 border border-apple-purple/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
             <div className="text-2xl mb-2">📄</div>
             <h3 className="text-sm font-semibold text-system-label-secondary mb-2">Número de Documentos</h3>
             <p className="text-3xl font-bold text-apple-purple">{kpiData.numeroDocumentos}</p>
+            {showComparison && comparisonKpiData && (
+              <div className="mt-2 text-xs">
+                <span className={`font-medium ${calculatePercentageChange(kpiData.numeroDocumentos, comparisonKpiData.numeroDocumentos) >= 0 ? 'text-apple-green' : 'text-apple-red'}`}>
+                  {calculatePercentageChange(kpiData.numeroDocumentos, comparisonKpiData.numeroDocumentos) >= 0 ? '↗' : '↘'} 
+                  {Math.abs(calculatePercentageChange(kpiData.numeroDocumentos, comparisonKpiData.numeroDocumentos)).toFixed(1)}%
+                </span>
+                <span className="text-system-label-tertiary ml-1">vs período anterior</span>
+              </div>
+            )}
           </Card>
           
           <Card className="text-center p-6 bg-gradient-to-br from-apple-orange/10 to-apple-orange/5 border border-apple-orange/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
             <div className="text-2xl mb-2">🎯</div>
             <h3 className="text-sm font-semibold text-system-label-secondary mb-2">Total de Vendas</h3>
             <p className="text-3xl font-bold text-apple-orange">{kpiData.totalVendas}</p>
+            {showComparison && comparisonKpiData && (
+              <div className="mt-2 text-xs">
+                <span className={`font-medium ${calculatePercentageChange(kpiData.totalVendas, comparisonKpiData.totalVendas) >= 0 ? 'text-apple-green' : 'text-apple-red'}`}>
+                  {calculatePercentageChange(kpiData.totalVendas, comparisonKpiData.totalVendas) >= 0 ? '↗' : '↘'} 
+                  {Math.abs(calculatePercentageChange(kpiData.totalVendas, comparisonKpiData.totalVendas)).toFixed(1)}%
+                </span>
+                <span className="text-system-label-tertiary ml-1">vs período anterior</span>
+              </div>
+            )}
           </Card>
         </div>
       )}
