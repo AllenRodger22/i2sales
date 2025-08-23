@@ -6,7 +6,6 @@ import { AddClientModal } from './components/AddClientModal';
 import { ProductivityReport } from './components/BrokerPanel';
 import { DashboardGestor } from './components/DashboardGestor';
 import { LeadPool } from './components/LeadPool';
-import { AuthCallback } from './components/AuthCallback';
 import { ProtectedRoleRoute } from './components/ProtectedRoleRoute';
 import { AuthScreen } from './components/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -204,9 +203,6 @@ const AppContent: React.FC = () => {
     const [eulaAccepted, setEulaAccepted] = useState(false);
     const [isEulaLoading, setIsEulaLoading] = useState(true);
 
-    if (window.location.pathname === '/auth/callback') {
-        return <AuthCallback />;
-    }
 
      useEffect(() => {
         try {
