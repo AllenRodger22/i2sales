@@ -15,10 +15,10 @@ import type { Client } from './types';
 
 type View = { type: 'DASHBOARD' } | { type: 'CLIENT_DETAIL'; clientId: string } | { type: 'PRODUCTIVITY_REPORT' } | { type: 'DASHBOARD_GESTOR' };
 
-const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'user' | 'manager' }> = ({ userName, onLogout, userRole }) => {
+const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'user' | 'manager' | 'admin' }> = ({ userName, onLogout, userRole }) => {
     const { clients, isLoading, addClient, findClientById, updateClient, importClients, deleteClient, deleteAllClients } = useClients();
     
-    const [view, setView] = useState<View>({ type: userRole === 'manager' ? 'DASHBOARD_GESTOR' : 'DASHBOARD' });
+    const [view, setView] = useState<View>({ type: (userRole === 'manager' || userRole === 'admin') ? 'DASHBOARD_GESTOR' : 'DASHBOARD' });
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleClientSelect = (id: string) => {
@@ -88,7 +88,7 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'user
                 );
             case 'DASHBOARD_GESTOR':
                 return (
-                    <ProtectedRoleRoute requiredRole="manager">
+                    <ProtectedRoleRoute requiredRole={['manager', 'admin']}>
                         <div className="min-h-full flex flex-col">
                             <nav className="bg-system-bg-secondary/80 backdrop-blur-md border-b border-system-separator/50 p-4">
                                 <div className="flex items-center justify-between max-w-7xl mx-auto">

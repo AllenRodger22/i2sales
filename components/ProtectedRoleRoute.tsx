@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRoleRouteProps {
-  requiredRole: 'user' | 'manager';
+  requiredRole: 'user' | 'manager' | 'admin' | ('manager' | 'admin')[];
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }
@@ -14,7 +14,11 @@ export const ProtectedRoleRoute: React.FC<ProtectedRoleRouteProps> = ({
 }) => {
   const { user } = useAuth();
 
-  if (!user || user.role !== requiredRole) {
+  const hasRequiredRole = Array.isArray(requiredRole) 
+    ? requiredRole.includes(user?.role as any)
+    : user?.role === requiredRole || (requiredRole === 'manager' && user?.role === 'admin') || (requiredRole === 'admin' && user?.role === 'manager');
+
+  if (!user || !hasRequiredRole) {
     return <>{fallback}</>;
   }
 
