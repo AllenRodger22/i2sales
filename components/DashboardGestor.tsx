@@ -59,6 +59,42 @@ export const DashboardGestor: React.FC = () => {
   const [comparisonKpiData, setComparisonKpiData] = useState<KpiData | null>(null);
   const [comparisonFunnelData, setComparisonFunnelData] = useState<FunnelData | null>(null);
   const [conversionSeries, setConversionSeries] = useState<{ date: string; leads: number; vendas: number; conversion: number; }[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    if ((mq as any).addEventListener) {
+      (mq as any).addEventListener('change', update);
+    } else {
+      (mq as any).addListener(update);
+    }
+    return () => {
+      if ((mq as any).removeEventListener) {
+        (mq as any).removeEventListener('change', update);
+      } else {
+        (mq as any).removeListener(update);
+      }
+    };
+  }, []);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    if (mq.addEventListener) {
+      mq.addEventListener('change', update);
+    } else {
+      mq.addListener(update);
+    }
+    return () => {
+      if (mq.removeEventListener) {
+        mq.removeEventListener('change', update);
+      } else {
+        mq.removeListener(update);
+      }
+    };
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -238,6 +274,12 @@ export const DashboardGestor: React.FC = () => {
               </select>
             </div>
             <div className="flex gap-2">
+      {isMobile && (
+        <div className="mb-4 rounded-2xl border border-apple-orange/40 bg-apple-orange/10 text-apple-orange px-4 py-3 text-center font-semibold tracking-wide">
+          ABRA NO PC OU LAPTOP!!
+        </div>
+      )}
+
               <Button
                 onClick={fetchData}
                 disabled={isLoading}
