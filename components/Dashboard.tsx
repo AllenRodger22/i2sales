@@ -185,7 +185,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
                     <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
                         {(userRole === 'manager' || userRole === 'admin') && onShowBiDashboard && (
                             <Button variant="secondary" onClick={onShowBiDashboard} className="bg-apple-blue/10 hover:bg-apple-blue/20 text-apple-blue border border-apple-blue/30">
-                                <Icon name="bar-chart-3" className="w-4 h-4 mr-2" />
                                 Dashboard BI
                             </Button>
                         )}

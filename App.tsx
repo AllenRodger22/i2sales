@@ -107,13 +107,13 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'user
                                                     : 'text-system-label-primary hover:bg-system-fill-primary/50 hover:scale-105'
                                             }`}
                                         >
-                                            📊 Dashboard BI
+                                            Dashboard BI
                                         </button>
                                         <button
                                             onClick={() => setView({ type: 'DASHBOARD' })}
                                             className="px-4 py-2 rounded-xl text-sm font-medium text-system-label-primary hover:bg-system-fill-primary/50 hover:scale-105 transition-all duration-200"
                                         >
-                                            👤 Visão Corretor
+                                            Visão Corretor
                                         </button>
                                     </div>
                                     <button
