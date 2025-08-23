@@ -33,6 +33,10 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'user
         setView({ type: 'PRODUCTIVITY_REPORT' });
     };
 
+    const handleShowBiDashboard = () => {
+        setView({ type: 'DASHBOARD_GESTOR' });
+    };
+
     const currentClient = useMemo(() => {
         if (view.type === 'CLIENT_DETAIL') {
             // Client ID from the backend is `_id`
@@ -63,6 +67,8 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'user
                         importClients={importClients}
                         onLogout={onLogout}
                         deleteAllClients={deleteAllClients}
+                        onShowBiDashboard={handleShowBiDashboard}
+                        userRole={userRole}
                     />
                 );
             case 'CLIENT_DETAIL':

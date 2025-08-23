@@ -23,6 +23,8 @@ interface DashboardProps {
     ) => Promise<{ imported: number; duplicates: number; failures: number }>;
     onLogout: () => void;
     deleteAllClients: () => Promise<void>;
+    onShowBiDashboard?: () => void;
+    userRole?: 'user' | 'manager' | 'admin';
 }
 
 type KpiFilterType = 'overdue' | 'today' | 'future' | 'primeiro-atendimento' | null;
@@ -50,7 +52,7 @@ const getNextFollowUp = (client: Client): string | undefined => {
 };
 
 
-export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClientSelect, onAddClient, onShowProductivityReport, importClients, onLogout, deleteAllClients }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClientSelect, onAddClient, onShowProductivityReport, importClients, onLogout, deleteAllClients, onShowBiDashboard, userRole }) => {
     const { user } = useAuth();
     const [filter, setFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all');
@@ -181,6 +183,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
                         <p className="text-system-label-secondary mt-1">Bem-vindo(a), {userName}.</p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
+                        {(userRole === 'manager' || userRole === 'admin') && onShowBiDashboard && (
+                            <Button variant="secondary" onClick={onShowBiDashboard} className="bg-apple-blue/10 hover:bg-apple-blue/20 text-apple-blue border border-apple-blue/30">
+                                <Icon name="bar-chart-3" className="w-4 h-4 mr-2" />
+                                Dashboard BI
+                            </Button>
+                        )}
                          <Button variant="secondary" onClick={onShowProductivityReport}>
                             <Icon name="bar-chart-2" className="w-4 h-4 mr-2" />
                             Produtividade
