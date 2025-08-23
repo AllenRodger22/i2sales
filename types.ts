@@ -57,6 +57,8 @@ export interface Client {
     timeline: TimelineEvent[];
     customFields?: { name: string; value: string }[];
     automatedFollowUps?: AutomatedFollowUp[];
+    ownerId?: string;
+    isArchived?: boolean;
 }
 
 

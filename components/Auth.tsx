@@ -49,6 +49,24 @@ const AuthForm: React.FC<{ isRegister: boolean }> = ({ isRegister }) => {
                 <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? 'Carregando...' : (isRegister ? 'Registrar e Entrar' : 'Entrar')}
                 </Button>
+                
+                <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-system-separator"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-system-bg-primary text-system-label-secondary">ou</span>
+                    </div>
+                </div>
+                
+                <button 
+                    type="button"
+                    onClick={() => window.location.href = `https://backend-crm-1-0quv.onrender.com/api/auth/google`}
+                    className="w-full px-4 py-2 bg-system-bg-tertiary text-system-label-primary border border-system-separator rounded-lg hover:bg-system-fill-primary transition-colors flex items-center justify-center"
+                >
+                    <Icon name="chrome" className="w-4 h-4 mr-2" />
+                    Entrar com Google
+                </button>
             </div>
         </form>
     );

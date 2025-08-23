@@ -4,18 +4,22 @@ import { Dashboard } from './components/Dashboard';
 import { ClientDetail } from './components/ClientDetail';
 import { AddClientModal } from './components/AddClientModal';
 import { ProductivityReport } from './components/BrokerPanel';
+import { DashboardGestor } from './components/DashboardGestor';
+import { LeadPool } from './components/LeadPool';
+import { AuthCallback } from './components/AuthCallback';
+import { ProtectedRoleRoute } from './components/ProtectedRoleRoute';
 import { AuthScreen } from './components/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { EulaModal } from './components/EulaModal';
 import type { Client } from './types';
 
 
-type View = { type: 'DASHBOARD' } | { type: 'CLIENT_DETAIL'; clientId: string } | { type: 'PRODUCTIVITY_REPORT' };
+type View = { type: 'DASHBOARD' } | { type: 'CLIENT_DETAIL'; clientId: string } | { type: 'PRODUCTIVITY_REPORT' } | { type: 'DASHBOARD_GESTOR' } | { type: 'LEAD_POOL' };
 
-const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName, onLogout }) => {
+const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'corretor' | 'gestor' }> = ({ userName, onLogout, userRole }) => {
     const { clients, isLoading, addClient, findClientById, updateClient, importClients, deleteClient, deleteAllClients } = useClients();
     
-    const [view, setView] = useState<View>({ type: 'DASHBOARD' });
+    const [view, setView] = useState<View>({ type: userRole === 'gestor' ? 'DASHBOARD_GESTOR' : 'DASHBOARD' });
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleClientSelect = (id: string) => {
@@ -83,6 +87,94 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void }> = ({ userName
                         clients={clients}
                     />
                 );
+            case 'DASHBOARD_GESTOR':
+                return (
+                    <ProtectedRoleRoute requiredRole="gestor">
+                        <div className="min-h-full flex flex-col">
+                            <nav className="bg-system-bg-secondary border-b border-system-separator p-4">
+                                <div className="flex items-center justify-between max-w-7xl mx-auto">
+                                    <div className="flex items-center space-x-6">
+                                        <button
+                                            onClick={() => setView({ type: 'DASHBOARD_GESTOR' })}
+                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                view.type === 'DASHBOARD_GESTOR'
+                                                    ? 'bg-apple-blue text-white'
+                                                    : 'text-system-label-primary hover:bg-system-fill-primary'
+                                            }`}
+                                        >
+                                            Dashboard BI
+                                        </button>
+                                        <button
+                                            onClick={() => setView({ type: 'LEAD_POOL' })}
+                                            className="px-3 py-2 rounded-lg text-sm font-medium text-system-label-primary hover:bg-system-fill-primary transition-colors"
+                                        >
+                                            Bolsão de Leads
+                                        </button>
+                                        <button
+                                            onClick={() => setView({ type: 'DASHBOARD' })}
+                                            className="px-3 py-2 rounded-lg text-sm font-medium text-system-label-primary hover:bg-system-fill-primary transition-colors"
+                                        >
+                                            Visão Corretor
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={onLogout}
+                                        className="px-3 py-2 rounded-lg text-sm font-medium text-system-label-primary hover:bg-system-fill-primary transition-colors"
+                                    >
+                                        Sair
+                                    </button>
+                                </div>
+                            </nav>
+                            <div className="flex-1">
+                                <DashboardGestor />
+                            </div>
+                        </div>
+                    </ProtectedRoleRoute>
+                );
+            case 'LEAD_POOL':
+                return (
+                    <ProtectedRoleRoute requiredRole="gestor">
+                        <div className="min-h-full flex flex-col">
+                            <nav className="bg-system-bg-secondary border-b border-system-separator p-4">
+                                <div className="flex items-center justify-between max-w-7xl mx-auto">
+                                    <div className="flex items-center space-x-6">
+                                        <button
+                                            onClick={() => setView({ type: 'DASHBOARD_GESTOR' })}
+                                            className="px-3 py-2 rounded-lg text-sm font-medium text-system-label-primary hover:bg-system-fill-primary transition-colors"
+                                        >
+                                            Dashboard BI
+                                        </button>
+                                        <button
+                                            onClick={() => setView({ type: 'LEAD_POOL' })}
+                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                view.type === 'LEAD_POOL'
+                                                    ? 'bg-apple-blue text-white'
+                                                    : 'text-system-label-primary hover:bg-system-fill-primary'
+                                            }`}
+                                        >
+                                            Bolsão de Leads
+                                        </button>
+                                        <button
+                                            onClick={() => setView({ type: 'DASHBOARD' })}
+                                            className="px-3 py-2 rounded-lg text-sm font-medium text-system-label-primary hover:bg-system-fill-primary transition-colors"
+                                        >
+                                            Visão Corretor
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={onLogout}
+                                        className="px-3 py-2 rounded-lg text-sm font-medium text-system-label-primary hover:bg-system-fill-primary transition-colors"
+                                    >
+                                        Sair
+                                    </button>
+                                </div>
+                            </nav>
+                            <div className="flex-1">
+                                <LeadPool />
+                            </div>
+                        </div>
+                    </ProtectedRoleRoute>
+                );
             default:
                 return null;
         }
@@ -111,6 +203,10 @@ const AppContent: React.FC = () => {
     const { isAuthenticated, user, isLoading, logout } = useAuth();
     const [eulaAccepted, setEulaAccepted] = useState(false);
     const [isEulaLoading, setIsEulaLoading] = useState(true);
+
+    if (window.location.pathname === '/auth/callback') {
+        return <AuthCallback />;
+    }
 
      useEffect(() => {
         try {
@@ -148,7 +244,7 @@ const AppContent: React.FC = () => {
         return <AuthScreen />;
     }
 
-    return <CrmApp userName={user.name} onLogout={logout} />;
+    return <CrmApp userName={user.name} onLogout={logout} userRole={user.role} />;
 };
 
 

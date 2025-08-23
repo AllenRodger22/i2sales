@@ -1,7 +1,7 @@
 import type { Client, TimelineEvent } from '../types';
 import { TimelineEventType, Status } from '../types';
 
-const API_BASE_URL = 'https://i2sales-backend.onrender.com';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://backend-crm-1-0quv.onrender.com';
 
 const getToken = () => localStorage.getItem('authToken');
 
@@ -42,6 +42,8 @@ export const mapApiToClient = (apiClient: any): Client => ({
     timeline: (apiClient.anexos?.timeline || []).map(mapApiTimelineEventToFrontend),
     customFields: apiClient.anexos?.customFields || [],
     automatedFollowUps: apiClient.anexos?.automatedFollowUps || [],
+    ownerId: apiClient.ownerId,
+    isArchived: apiClient.isArchived || false,
 });
 
 // Maps the frontend Client type to the structure expected by the API
@@ -147,3 +149,30 @@ export const apiUpdateClient = (clientId: string, clientData: Partial<Client>) =
 export const apiDeleteClient = (clientId: string) => apiRequest(`/api/clientes/${clientId}`, 'DELETE');
 
 export const apiDeleteAllClients = () => apiRequest(`/api/clientes/bulk-delete`, 'DELETE');
+
+export const apiGetArchivedLeads = async (): Promise<Client[]> => {
+    const data = await apiRequest('/api/clientes/archived', 'GET');
+    if (!data) return [];
+    return Array.isArray(data) ? data.map(mapApiToClient) : [];
+};
+
+export const apiAssignLead = (leadId: string, userId: string) => {
+    return apiRequest(`/api/clientes/${leadId}/assign`, 'PATCH', { userId });
+};
+
+export const apiArchiveLead = (leadId: string) => {
+    return apiRequest(`/api/clientes/${leadId}/archive`, 'PATCH');
+};
+
+export const apiGetCorretores = async (): Promise<any[]> => {
+    const data = await apiRequest('/api/users/corretores', 'GET');
+    return data || [];
+};
+
+export const apiGetKpis = (startDate: string, endDate: string) => {
+    return apiRequest(`/api/bi/kpis?startDate=${startDate}&endDate=${endDate}`, 'GET');
+};
+
+export const apiGetFunnel = (startDate: string, endDate: string) => {
+    return apiRequest(`/api/bi/funnel?startDate=${startDate}&endDate=${endDate}`, 'GET');
+};

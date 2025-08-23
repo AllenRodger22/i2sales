@@ -8,6 +8,7 @@ import {
     apiUpdateClient, 
     apiDeleteClient,
     apiDeleteAllClients,
+    apiArchiveLead,
 } from '../services/api';
 
 
@@ -210,5 +211,15 @@ export const useClients = () => {
         }
     }, [fetchClients]);
 
-    return { clients, isLoading, addClient, findClientById, updateClient, importClients, deleteClient, deleteAllClients };
+    const archiveClient = async (clientId: string) => {
+        try {
+            await apiArchiveLead(clientId);
+            await fetchClients();
+        } catch (error) {
+            console.error('Erro ao arquivar cliente:', error);
+            throw error;
+        }
+    };
+
+    return { clients, isLoading, addClient, findClientById, updateClient, importClients, deleteClient, deleteAllClients, archiveClient };
 };
