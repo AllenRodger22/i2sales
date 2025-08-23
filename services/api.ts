@@ -1,7 +1,7 @@
 import type { Client, TimelineEvent } from '../types';
 import { TimelineEventType, Status } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://i2sales-backend.onrender.com';
 
 const getToken = () => localStorage.getItem('authToken');
 
@@ -72,6 +72,11 @@ export const mapClientToApi = (client: Partial<Client>): any => {
 
 const apiRequest = async (endpoint: string, method: string, body?: any) => {
     const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    const token = getToken();
+    
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
 
     const config: RequestInit = {
         method,
@@ -157,32 +162,4 @@ export const apiAssignLead = (leadId: string, userId: string) => {
 
 export const apiArchiveLead = (leadId: string) => {
     return apiRequest(`/api/clientes/${leadId}/archive`, 'PATCH');
-};
-
-export const apiGetCorretores = async (): Promise<any[]> => {
-    try {
-        const data = await apiRequest('/api/users/corretores', 'GET');
-        if (Array.isArray(data) && data.length > 0) return data;
-        const alt = await apiRequest('/api/users/all', 'GET');
-        return Array.isArray(alt) ? alt : [];
-    } catch {
-        try {
-            const alt = await apiRequest('/api/users/all', 'GET');
-            return Array.isArray(alt) ? alt : [];
-        } catch {
-            return [];
-        }
-    }
-};
-
-export const apiGetKpis = (params: string) => {
-    return apiRequest(`/api/bi/kpis?${params}`, 'GET');
-};
-
-export const apiGetFunnel = (params: string) => {
-    return apiRequest(`/api/bi/funnel?${params}`, 'GET');
-};
-
-export const apiGetConversionSeries = (params: string) => {
-    return apiRequest(`/api/bi/conversion-series?${params}`, 'GET');
 };

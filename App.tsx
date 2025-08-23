@@ -4,21 +4,19 @@ import { Dashboard } from './components/Dashboard';
 import { ClientDetail } from './components/ClientDetail';
 import { AddClientModal } from './components/AddClientModal';
 import { ProductivityReport } from './components/BrokerPanel';
-import { DashboardGestor } from './components/DashboardGestor';
 import { LeadPool } from './components/LeadPool';
-import { ProtectedRoleRoute } from './components/ProtectedRoleRoute';
 import { AuthScreen } from './components/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { EulaModal } from './components/EulaModal';
 import type { Client } from './types';
 
 
-type View = { type: 'DASHBOARD' } | { type: 'CLIENT_DETAIL'; clientId: string } | { type: 'PRODUCTIVITY_REPORT' } | { type: 'DASHBOARD_GESTOR' };
+type View = { type: 'DASHBOARD' } | { type: 'CLIENT_DETAIL'; clientId: string } | { type: 'PRODUCTIVITY_REPORT' };
 
 const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'user' | 'manager' | 'admin' }> = ({ userName, onLogout, userRole }) => {
     const { clients, isLoading, addClient, findClientById, updateClient, importClients, deleteClient, deleteAllClients } = useClients();
     
-    const [view, setView] = useState<View>({ type: (userRole === 'manager' || userRole === 'admin') ? 'DASHBOARD_GESTOR' : 'DASHBOARD' });
+    const [view, setView] = useState<View>({ type: 'DASHBOARD' });
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleClientSelect = (id: string) => {
@@ -33,9 +31,6 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'user
         setView({ type: 'PRODUCTIVITY_REPORT' });
     };
 
-    const handleShowBiDashboard = () => {
-        setView({ type: 'DASHBOARD_GESTOR' });
-    };
 
     const currentClient = useMemo(() => {
         if (view.type === 'CLIENT_DETAIL') {
@@ -67,7 +62,6 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'user
                         importClients={importClients}
                         onLogout={onLogout}
                         deleteAllClients={deleteAllClients}
-                        onShowBiDashboard={handleShowBiDashboard}
                         userRole={userRole}
                     />
                 );
@@ -91,44 +85,6 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'user
                         onBack={handleBackToDashboard}
                         clients={clients}
                     />
-                );
-            case 'DASHBOARD_GESTOR':
-                return (
-                    <ProtectedRoleRoute requiredRole={['manager', 'admin']}>
-                        <div className="min-h-full flex flex-col">
-                            <nav className="bg-system-bg-secondary/80 backdrop-blur-md border-b border-system-separator/50 p-4">
-                                <div className="flex items-center justify-between max-w-7xl mx-auto">
-                                    <div className="flex items-center space-x-2">
-                                        <button
-                                            onClick={() => setView({ type: 'DASHBOARD_GESTOR' })}
-                                            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                                                view.type === 'DASHBOARD_GESTOR'
-                                                    ? 'bg-apple-blue text-white shadow-lg shadow-apple-blue/25'
-                                                    : 'text-system-label-primary hover:bg-system-fill-primary/50 hover:scale-105'
-                                            }`}
-                                        >
-                                            Dashboard BI
-                                        </button>
-                                        <button
-                                            onClick={() => setView({ type: 'DASHBOARD' })}
-                                            className="px-4 py-2 rounded-xl text-sm font-medium text-system-label-primary hover:bg-system-fill-primary/50 hover:scale-105 transition-all duration-200"
-                                        >
-                                            Visão Corretor
-                                        </button>
-                                    </div>
-                                    <button
-                                        onClick={onLogout}
-                                        className="px-4 py-2 rounded-xl text-sm font-medium text-system-label-secondary hover:bg-system-fill-primary/50 hover:text-system-label-primary transition-all duration-200"
-                                    >
-                                        Sair
-                                    </button>
-                                </div>
-                            </nav>
-                            <div className="flex-1 bg-system-bg-primary">
-                                <DashboardGestor />
-                            </div>
-                        </div>
-                    </ProtectedRoleRoute>
                 );
             default:
                 return null;

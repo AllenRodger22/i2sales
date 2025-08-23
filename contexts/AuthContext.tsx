@@ -102,9 +102,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const value = {
-        isAuthenticated: true,
-        user: user || { name: 'Test User', role: 'admin' },
-        token: token || 'fake-token',
+        isAuthenticated: !!token,
+        user,
+        token,
         isLoading,
         login,
         register,
