@@ -98,7 +98,7 @@ export const LeadPool: React.FC = () => {
                 
                 <div className="flex items-center gap-2">
                   <select
-                    className="bg-system-bg-primary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue"
+                    className="glass-input text-system-label-primary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue"
                     onChange={(e) => {
                       if (e.target.value) {
                         handleAssignLead(lead._id!, e.target.value);

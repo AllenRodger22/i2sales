@@ -11,8 +11,8 @@ export const EulaModal: React.FC<EulaModalProps> = ({ onAccept }) => {
     const [isChecked, setIsChecked] = useState(false);
 
     return (
-        <div className="fixed inset-0 bg-system-bg-secondary flex justify-center items-center z-[100] p-4">
-            <div className="bg-system-bg-primary rounded-2xl shadow-2xl w-full max-w-2xl h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xl flex justify-center items-center z-[100] p-4">
+            <div className="glass rounded-2xl shadow-2xl w-full max-w-2xl h-[90vh] flex flex-col">
                 <div className="p-6 border-b border-system-separator flex-shrink-0">
                     <h2 className="text-2xl font-bold text-system-label-primary">Acordo de Licença de Usuário Final (EULA)</h2>
                 </div>
@@ -83,7 +83,7 @@ export const EulaModal: React.FC<EulaModalProps> = ({ onAccept }) => {
                             type="checkbox" 
                             checked={isChecked} 
                             onChange={() => setIsChecked(!isChecked)} 
-                            className="form-checkbox h-5 w-5 rounded text-apple-blue bg-system-bg-tertiary border-system-separator focus:ring-apple-blue"
+                            className="form-checkbox h-5 w-5 rounded text-apple-blue glass-input focus:ring-apple-blue"
                         />
                         <span className="text-sm text-system-label-primary">Eu li e concordo com os termos e condições.</span>
                     </label>

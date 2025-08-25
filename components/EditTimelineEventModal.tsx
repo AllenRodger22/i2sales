@@ -11,7 +11,7 @@ interface EditTimelineEventModalProps {
     onSave: (eventId: string, updatedData: Partial<Omit<TimelineEvent, 'id' | 'date'>>) => void;
 }
 
-const inputClasses = "mt-1 block w-full bg-system-bg-tertiary dark:bg-system-bg-secondary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
+const inputClasses = "mt-1 block w-full glass-input text-system-label-primary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
 
 const parseCallContent = (content: string): { result: 'CE' | 'CNE'; reason: string; observation: string } => {
     const defaultReason = CNE_OPTIONS[1]; // N Atendeu
@@ -96,11 +96,11 @@ export const EditTimelineEventModal: React.FC<EditTimelineEventModalProps> = ({ 
                         <label className="text-sm font-medium text-system-label-secondary">Resultado</label>
                         <div className="mt-2 flex gap-4">
                              <label className="flex items-center space-x-2 cursor-pointer">
-                                <input type="radio" name="call-result" value="CE" checked={callResult === 'CE'} onChange={() => setCallResult('CE')} className="form-radio text-apple-blue focus:ring-apple-blue bg-system-bg-tertiary border-system-separator"/>
+                                <input type="radio" name="call-result" value="CE" checked={callResult === 'CE'} onChange={() => setCallResult('CE')} className="form-radio text-apple-blue focus:ring-apple-blue glass-input"/>
                                 <span className="text-sm text-system-label-primary">CE (Contato Efetivo)</span>
                             </label>
                             <label className="flex items-center space-x-2 cursor-pointer">
-                                <input type="radio" name="call-result" value="CNE" checked={callResult === 'CNE'} onChange={() => setCallResult('CNE')} className="form-radio text-apple-blue focus:ring-apple-blue bg-system-bg-tertiary border-system-separator"/>
+                                <input type="radio" name="call-result" value="CNE" checked={callResult === 'CNE'} onChange={() => setCallResult('CNE')} className="form-radio text-apple-blue focus:ring-apple-blue glass-input"/>
                                 <span className="text-sm text-system-label-primary">CNE (Contato Não Efetivo)</span>
                             </label>
                         </div>
@@ -145,7 +145,7 @@ export const EditTimelineEventModal: React.FC<EditTimelineEventModalProps> = ({ 
 
     return (
          <div className="fixed inset-0 bg-black/60 backdrop-blur-xl flex justify-center items-center z-50 p-4">
-            <div className="bg-system-bg-secondary rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="glass rounded-2xl shadow-2xl w-full max-w-md">
                 <div className="p-6 border-b border-system-separator flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-system-label-primary">Editar Evento da Timeline</h2>
                     <button onClick={onClose} className="text-system-label-secondary hover:text-system-label-primary">

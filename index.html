@@ -36,8 +36,27 @@
             --system-separator: #3a3a3c;
         }
         body {
-            background-color: var(--system-bg-secondary);
             color: var(--system-label-primary);
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .dark .glass {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-input {
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .dark .glass-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
@@ -99,7 +118,7 @@
 }
 </script>
 </head>
-<body class="bg-system-bg-secondary antialiased dark">
+<body class="min-h-screen bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 dark:from-gray-900 dark:via-gray-800 dark:to-black antialiased dark">
 <div id="root"></div>
 <script type="module" src="/index.tsx"></script>
 </body>

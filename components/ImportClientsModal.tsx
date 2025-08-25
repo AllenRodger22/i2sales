@@ -25,7 +25,7 @@ const OPTIONAL_FIELDS: Record<string, string> = {
     anexos: 'Anexos (JSON)'
 };
 
-const baseInputClasses = "block w-full bg-system-bg-tertiary dark:bg-system-bg-secondary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
+const baseInputClasses = "block w-full glass-input text-system-label-primary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
 
 
 export const ImportClientsModal: React.FC<ImportClientsModalProps> = ({ onClose, onImport }) => {
@@ -131,7 +131,7 @@ export const ImportClientsModal: React.FC<ImportClientsModalProps> = ({ onClose,
             case 'UPLOAD':
                 return (
                     <div className="text-center">
-                        <label htmlFor="csv-upload" className="flex flex-col items-center justify-center w-full h-48 border-2 border-system-separator border-dashed rounded-lg cursor-pointer bg-system-bg-tertiary hover:bg-system-fill-primary">
+                        <label htmlFor="csv-upload" className="flex flex-col items-center justify-center w-full h-48 border-2 border-system-separator border-dashed rounded-lg cursor-pointer glass hover:bg-white/40 dark:hover:bg-black/40">
                             <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                 <Icon name="upload" className="w-10 h-10 mb-3 text-system-label-secondary" />
                                 <p className="mb-2 text-sm text-system-label-secondary"><span className="font-semibold">Clique para enviar</span> ou arraste e solte</p>
@@ -149,12 +149,12 @@ export const ImportClientsModal: React.FC<ImportClientsModalProps> = ({ onClose,
                         <p className="text-sm text-system-label-secondary">Combine as colunas do seu arquivo CSV com os campos do CRM. <strong className="text-system-label-primary">Nome</strong> e <strong className="text-system-label-primary">Telefone</strong> são obrigatórios.</p>
                         
                         <fieldset className="space-y-4 border-t border-system-separator pt-4">
-                            <legend className="text-xs font-semibold text-system-label-secondary uppercase -translate-y-6 bg-system-bg-secondary px-2">Campos Obrigatórios</legend>
+                            <legend className="text-xs font-semibold text-system-label-secondary uppercase -translate-y-6 bg-white/20 dark:bg-black/20 px-2">Campos Obrigatórios</legend>
                              {Object.entries(REQUIRED_FIELDS).map(([fieldKey, fieldLabel]) => <MappingField key={fieldKey} fieldKey={fieldKey} fieldLabel={fieldLabel} />)}
                         </fieldset>
 
                         <fieldset className="space-y-4 border-t border-system-separator pt-4">
-                            <legend className="text-xs font-semibold text-system-label-secondary uppercase -translate-y-6 bg-system-bg-secondary px-2">Campos Opcionais (Histórico)</legend>
+                            <legend className="text-xs font-semibold text-system-label-secondary uppercase -translate-y-6 bg-white/20 dark:bg-black/20 px-2">Campos Opcionais (Histórico)</legend>
                             {Object.entries(OPTIONAL_FIELDS).map(([fieldKey, fieldLabel]) => <MappingField key={fieldKey} fieldKey={fieldKey} fieldLabel={fieldLabel} />)}
                         </fieldset>
                     </div>
@@ -201,7 +201,7 @@ export const ImportClientsModal: React.FC<ImportClientsModalProps> = ({ onClose,
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xl flex justify-center items-center z-50 p-4">
-            <div className="bg-system-bg-secondary rounded-2xl shadow-2xl w-full max-w-lg">
+            <div className="glass rounded-2xl shadow-2xl w-full max-w-lg">
                 <div className="p-6 border-b border-system-separator flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-system-label-primary">{getModalTitle()}</h2>
                      <button onClick={onClose} className="text-system-label-secondary hover:text-system-label-primary">

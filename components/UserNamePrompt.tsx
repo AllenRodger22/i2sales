@@ -6,7 +6,7 @@ interface UserNamePromptProps {
     onNameSet: (name: string) => void;
 }
 
-const inputClasses = "mt-2 block w-full bg-system-bg-primary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-base text-center focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
+const inputClasses = "mt-2 block w-full glass-input text-system-label-primary rounded-lg px-3 py-2 text-base text-center focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
 
 export const UserNamePrompt: React.FC<UserNamePromptProps> = ({ onNameSet }) => {
     const [name, setName] = useState('');
@@ -19,8 +19,8 @@ export const UserNamePrompt: React.FC<UserNamePromptProps> = ({ onNameSet }) => 
     };
 
     return (
-        <div className="fixed inset-0 bg-system-bg-secondary flex justify-center items-center z-50 p-4">
-            <div className="w-full max-w-sm text-center">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xl flex justify-center items-center z-50 p-4">
+            <div className="w-full max-w-sm text-center glass p-6 rounded-2xl">
                  <Icon name="user" className="w-16 h-16 mx-auto text-system-label-tertiary mb-4" />
                 <h1 className="text-2xl font-bold text-system-label-primary">Bem-vindo(a)!</h1>
                 <p className="text-system-label-secondary mt-2">Para começar, por favor, insira seu nome. Ele será usado para identificar seus relatórios exportados.</p>

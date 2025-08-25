@@ -53,7 +53,7 @@ const FunnelStep: React.FC<{
                      <div className="h-8 w-px bg-system-separator"></div>
                 </div>
             )}
-            <div className="flex items-center gap-4 p-4 rounded-xl bg-system-bg-primary w-full max-w-xs justify-between">
+            <div className="flex items-center gap-4 p-4 rounded-xl glass w-full max-w-xs justify-between">
                 <span className="text-sm font-medium text-system-label-primary">{label}</span>
                 <span className="text-lg font-bold text-system-label-primary">{value}</span>
             </div>
@@ -94,7 +94,7 @@ export const FunnelModal: React.FC<FunnelModalProps> = ({ onClose, metrics }) =>
     
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xl flex justify-center items-center z-50 p-4">
-            <div className="bg-system-bg-secondary rounded-2xl shadow-2xl w-full max-w-sm">
+            <div className="glass rounded-2xl shadow-2xl w-full max-w-sm">
                 <div className="p-6 border-b border-system-separator flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-system-label-primary">Funil de Vendas do Dia</h2>
                      <button onClick={onClose} className="text-system-label-secondary hover:text-system-label-primary">
