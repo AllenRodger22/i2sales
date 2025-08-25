@@ -18,7 +18,7 @@ interface ClientDetailProps {
     deleteClient: (id: string) => Promise<boolean>;
 }
 
-const inputClasses = "block w-full bg-system-bg-tertiary dark:bg-system-bg-secondary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
+const inputClasses = "block w-full glass-input text-system-label-primary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
 const editableTypes: TimelineEventType[] = [TimelineEventType.Ligacao, TimelineEventType.Observacao, TimelineEventType.CNE, TimelineEventType.Anotacao];
 const secondaryButtonLinkClasses = "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-apple-blue focus:ring-offset-2 dark:focus:ring-offset-system-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed bg-system-fill-primary text-system-label-primary hover:bg-system-fill-secondary active:brightness-95 dark:active:brightness-105";
 
@@ -51,7 +51,7 @@ const TimelineItem: React.FC<{ event: TimelineEvent; onEdit: (event: TimelineEve
             onClick={() => isEditable && onEdit(event)}
         >
             {!isLast && <div className="absolute left-3 top-6 bottom-2 w-px bg-system-separator"></div>}
-            <div className="relative flex h-6 w-6 flex-none items-center justify-center bg-system-bg-secondary rounded-full mt-2 ring-8 ring-system-bg-primary">
+            <div className="relative flex h-6 w-6 flex-none items-center justify-center glass rounded-full mt-2 ring-8 ring-system-bg-primary">
                 {getIcon(event.type)}
             </div>
             <div className="flex-auto py-2">
@@ -367,7 +367,7 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
     return (
         <>
             {isSaving && (
-                <div className="fixed inset-0 bg-system-bg-secondary/80 backdrop-blur-sm flex justify-center items-center z-[100]">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-xl flex justify-center items-center z-[100]">
                     <svg className="animate-spin h-10 w-10 text-apple-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -450,7 +450,7 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
                                                     disabled={isDisabled}
                                                     className={`px-2.5 py-1 text-xs font-medium rounded-full transition-all border
                                                         ${editedClient.status === opt.value ? `${opt.className} border-transparent ring-2 ring-offset-2 ring-apple-blue dark:ring-offset-system-bg-primary`
-                                                            : 'bg-system-bg-primary border-system-separator text-system-label-primary hover:bg-system-fill-primary'
+                                                            : 'glass text-system-label-primary hover:bg-white/40 dark:hover:bg-white/20'
                                                         }
                                                         ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`
                                                     }
@@ -504,7 +504,7 @@ export const ClientDetail: React.FC<ClientDetailProps> = ({ client, onBack, upda
                                             const isDone = f.status === AutomatedFollowUpStatus.Done;
 
                                             return (
-                                                <li key={f.id} className="flex items-center justify-between p-2 rounded-lg bg-system-bg-secondary">
+                                                <li key={f.id} className="flex items-center justify-between p-2 rounded-lg glass">
                                                     <div>
                                                         <p className={`text-sm font-medium ${isOverdue ? 'text-apple-red' : 'text-system-label-primary'} ${isDone ? 'line-through text-system-label-tertiary' : ''}`}>
                                                             {new Date(f.date).toLocaleString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}

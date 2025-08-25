@@ -17,7 +17,7 @@ const ClientListItem: React.FC<{
     return (
         <li
             onClick={onSelect}
-            className="rounded-xl hover:bg-system-bg-secondary transition-colors duration-150 cursor-pointer"
+            className="rounded-xl glass hover:bg-white/40 dark:hover:bg-white/20 transition-colors duration-150 cursor-pointer"
         >
             <div className="flex items-center space-x-4 p-4">
                 <div className="flex-1 min-w-0 flex items-center space-x-3">

@@ -9,7 +9,7 @@ interface EditClientModalProps {
     onSave: (updatedData: Partial<Client>) => void;
 }
 
-const inputClasses = "mt-1 block w-full bg-system-bg-tertiary dark:bg-system-bg-secondary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
+const inputClasses = "mt-1 block w-full glass-input text-system-label-primary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
 
 export const EditClientModal: React.FC<EditClientModalProps> = ({ client, onClose, onSave }) => {
     const [name, setName] = useState(client.name);
@@ -59,7 +59,7 @@ export const EditClientModal: React.FC<EditClientModalProps> = ({ client, onClos
     
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xl flex justify-center items-center z-50 p-4">
-            <div className="bg-system-bg-secondary rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="glass rounded-2xl shadow-2xl w-full max-w-md">
                 <div className="p-6 border-b border-system-separator flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-system-label-primary">Editar Cliente</h2>
                      <button onClick={onClose} className="text-system-label-secondary hover:text-system-label-primary">

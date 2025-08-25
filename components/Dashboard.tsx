@@ -172,7 +172,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userName, clients, onClien
         }
     };
     
-    const baseInputClasses = "bg-system-bg-primary text-system-label-primary border border-system-separator rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
+    const baseInputClasses = "glass-input text-system-label-primary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent placeholder-system-label-tertiary";
 
     return (
         <div className="min-h-full flex flex-col">
