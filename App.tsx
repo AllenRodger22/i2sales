@@ -10,6 +10,8 @@ import { ProtectedRoleRoute } from './components/ProtectedRoleRoute';
 import { AuthScreen } from './components/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { EulaModal } from './components/EulaModal';
+import { ThemeSwitcher } from './components/ThemeSwitcher';
+import { useTheme } from './hooks/useTheme';
 import type { Client } from './types';
 
 
@@ -199,11 +201,28 @@ const AppContent: React.FC = () => {
     return <CrmApp userName={user.name} onLogout={logout} userRole={user.role} />;
 };
 
-
 const App: React.FC = () => {
+    const { theme, toggleTheme } = useTheme();
+
+    useEffect(() => {
+        const root = document.documentElement;
+        if (theme === 'dark') {
+            root.classList.add('dark');
+        } else {
+            root.classList.remove('dark');
+        }
+    }, [theme]);
+
     return (
         <AuthProvider>
-            <AppContent />
+            <div className="min-h-screen bg-system-bg-secondary flex flex-col">
+                <header className="bg-system-bg-secondary/80 backdrop-blur-md border-b border-system-separator/50 p-4 flex justify-end">
+                    <ThemeSwitcher theme={theme} toggleTheme={toggleTheme} />
+                </header>
+                <main className="flex-grow">
+                    <AppContent />
+                </main>
+            </div>
         </AuthProvider>
     );
 };
