@@ -96,7 +96,7 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'user
                 return (
                     <ProtectedRoleRoute requiredRole={['manager', 'admin']}>
                         <div className="min-h-full flex flex-col">
-                            <nav className="bg-system-bg-secondary/80 backdrop-blur-md border-b border-system-separator/50 p-4">
+                            <nav className="bg-white/30 backdrop-blur-xl border border-white/20 p-4">
                                 <div className="flex items-center justify-between max-w-7xl mx-auto">
                                     <div className="flex items-center space-x-2">
                                         <button
@@ -146,7 +146,7 @@ const CrmApp: React.FC<{ userName: string, onLogout: () => void, userRole: 'user
                     />
                 )}
             </main>
-             <footer className="text-center p-4 text-xs text-system-label-tertiary flex-shrink-0 flex items-center justify-center gap-2">
+             <footer className="bg-white/30 backdrop-blur-xl border border-white/20 text-center p-4 text-xs text-system-label-tertiary flex-shrink-0 flex items-center justify-center gap-2">
                 <span>i2Sales CRM v5.0.0</span>
             </footer>
         </div>
